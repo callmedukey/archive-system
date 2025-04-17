@@ -58,6 +58,13 @@ const page = async ({ params }: { params: Promise<{ noticeId: string }> }) => {
     return notFound();
   }
 
+  await db
+    .update(notices)
+    .set({
+      viewCount: notice.viewCount + 1,
+    })
+    .where(eq(notices.id, Number(noticeId)));
+
   return (
     <div className="p-4 space-y-6 rounded-lg shadow-md py-6">
       {/* Header */}

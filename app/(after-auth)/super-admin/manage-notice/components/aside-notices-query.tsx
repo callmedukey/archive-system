@@ -22,16 +22,16 @@ const AsideNoticesQuery = ({
   const handleOrderByChange = (value: string | number) => {
     if (value === "latest") {
       setNotices((notices: FetchedNotice[]) =>
-        notices.sort(
+        [...notices].sort(
           (a, b) =>
-            new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+            new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
         )
       );
     } else {
       setNotices((notices: FetchedNotice[]) =>
-        notices.sort(
+        [...notices].sort(
           (a, b) =>
-            new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+            new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
         )
       );
     }
