@@ -1,9 +1,12 @@
 "use client";
 
+import { Plus } from "lucide-react";
+import Link from "next/link";
 import React, { Dispatch, SetStateAction, useState } from "react";
 
 import SearchInputWithButton from "@/components/shared/search-input-with-button";
 import SelectWithLabel from "@/components/shared/select-with-label";
+import { Button } from "@/components/ui/button";
 import { FetchedNotice } from "@/db/schemas";
 
 import { queryNotices } from "../actions/query-notices";
@@ -45,7 +48,7 @@ const AsideNoticesQuery = ({
   };
 
   return (
-    <aside className="mt-6">
+    <aside className="mt-6 flex items-end justify-between">
       <div className="grid grid-cols-2 gap-2 max-w-xs items-baseline">
         <SearchInputWithButton
           className="rounded-lg"
@@ -68,6 +71,12 @@ const AsideNoticesQuery = ({
           onChange={handleOrderByChange}
         />
       </div>
+      <Button className="rounded-lg" asChild>
+        <Link href="/super-admin/manage-notice/new">
+          <Plus />
+          공지사항 작성
+        </Link>
+      </Button>
     </aside>
   );
 };

@@ -18,18 +18,32 @@ type PaginationProps = {
   currentPage: number;
   totalPages: number;
   paginationItemsToDisplay?: number;
+  onPageChange?: (page: number) => void;
 };
 
 export default function StandardPagination({
   currentPage,
   totalPages,
   paginationItemsToDisplay = 5,
+  onPageChange,
 }: PaginationProps) {
   const { pages, showLeftEllipsis, showRightEllipsis } = usePagination({
     currentPage,
     totalPages,
     paginationItemsToDisplay,
   });
+
+  const handleLinkClick = (
+    e: React.MouseEvent<HTMLAnchorElement>,
+    page: number
+  ) => {
+    if (onPageChange) {
+      e.preventDefault();
+      onPageChange(page);
+    }
+  };
+
+  const createHref = (page: number) => (onPageChange ? "#" : `#/page/${page}`);
 
   return (
     <Pagination>
@@ -38,10 +52,13 @@ export default function StandardPagination({
         <PaginationItem>
           <PaginationLink
             className="aria-disabled:pointer-events-none aria-disabled:opacity-50"
-            href={currentPage === 1 ? undefined : `#/page/${currentPage - 1}`}
+            href={currentPage === 1 ? undefined : createHref(1)}
+            onClick={
+              currentPage === 1 ? undefined : (e) => handleLinkClick(e, 1)
+            }
             aria-label="Go to first page"
-            aria-disabled={currentPage === 1 ? true : undefined}
-            role={currentPage === 1 ? "link" : undefined}
+            aria-disabled={currentPage === 1}
+            role={currentPage === 1 ? undefined : "link"}
           >
             <ChevronFirstIcon size={16} aria-hidden="true" />
           </PaginationLink>
@@ -51,10 +68,15 @@ export default function StandardPagination({
         <PaginationItem>
           <PaginationLink
             className="aria-disabled:pointer-events-none aria-disabled:opacity-50"
-            href={currentPage === 1 ? undefined : `#/page/${currentPage - 1}`}
+            href={currentPage === 1 ? undefined : createHref(currentPage - 1)}
+            onClick={
+              currentPage === 1
+                ? undefined
+                : (e) => handleLinkClick(e, currentPage - 1)
+            }
             aria-label="Go to previous page"
-            aria-disabled={currentPage === 1 ? true : undefined}
-            role={currentPage === 1 ? "link" : undefined}
+            aria-disabled={currentPage === 1}
+            role={currentPage === 1 ? undefined : "link"}
           >
             <ChevronLeftIcon size={16} aria-hidden="true" />
           </PaginationLink>
@@ -71,8 +93,10 @@ export default function StandardPagination({
         {pages.map((page) => (
           <PaginationItem key={page}>
             <PaginationLink
-              href={`#/page/${page}`}
+              href={createHref(page)}
+              onClick={(e) => handleLinkClick(e, page)}
               isActive={page === currentPage}
+              aria-current={page === currentPage ? "page" : undefined}
             >
               {page}
             </PaginationLink>
@@ -93,11 +117,16 @@ export default function StandardPagination({
             href={
               currentPage === totalPages
                 ? undefined
-                : `#/page/${currentPage + 1}`
+                : createHref(currentPage + 1)
+            }
+            onClick={
+              currentPage === totalPages
+                ? undefined
+                : (e) => handleLinkClick(e, currentPage + 1)
             }
             aria-label="Go to next page"
-            aria-disabled={currentPage === totalPages ? true : undefined}
-            role={currentPage === totalPages ? "link" : undefined}
+            aria-disabled={currentPage === totalPages}
+            role={currentPage === totalPages ? undefined : "link"}
           >
             <ChevronRightIcon size={16} aria-hidden="true" />
           </PaginationLink>
@@ -108,11 +137,16 @@ export default function StandardPagination({
           <PaginationLink
             className="aria-disabled:pointer-events-none aria-disabled:opacity-50"
             href={
-              currentPage === totalPages ? undefined : `#/page/${totalPages}`
+              currentPage === totalPages ? undefined : createHref(totalPages)
+            }
+            onClick={
+              currentPage === totalPages
+                ? undefined
+                : (e) => handleLinkClick(e, totalPages)
             }
             aria-label="Go to last page"
-            aria-disabled={currentPage === totalPages ? true : undefined}
-            role={currentPage === totalPages ? "link" : undefined}
+            aria-disabled={currentPage === totalPages}
+            role={currentPage === totalPages ? undefined : "link"}
           >
             <ChevronLastIcon size={16} aria-hidden="true" />
           </PaginationLink>

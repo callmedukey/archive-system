@@ -35,7 +35,7 @@ const layout = async ({ children }: { children: React.ReactNode }) => {
     },
     {
       label: "문의사항",
-      href: "/super-admin/inquiries",
+      href: "/super-admin/manage-inquiries",
       icon: <MessageCircle />,
     },
     {

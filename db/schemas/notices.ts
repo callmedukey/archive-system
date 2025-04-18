@@ -11,6 +11,9 @@ import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
 import { Role, users, Island } from "./auth";
+import { comments } from "./comments";
+import { files } from "./files";
+import { images } from "./images";
 
 export const notices = pgTable("notices", {
   id: serial("id").primaryKey(),
@@ -52,77 +55,6 @@ export type NewNotice = Omit<
     key: string;
   }[];
 };
-
-export const comments = pgTable("comments", {
-  id: serial("id").primaryKey(),
-  content: text("content").notNull(),
-  noticeId: integer("notice_id").references(() => notices.id, {
-    onDelete: "cascade",
-  }),
-  authorId: text("author_id").references(() => users.id, {
-    onDelete: "cascade",
-  }),
-  createdAt: timestamp("created_at").notNull().defaultNow(),
-});
-
-// Define relations for comments
-export const commentsRelations = relations(comments, ({ one }) => ({
-  author: one(users, {
-    fields: [comments.authorId],
-    references: [users.id],
-  }),
-  notice: one(notices, {
-    // Also define the relation back to the notice
-    fields: [comments.noticeId],
-    references: [notices.id],
-  }),
-}));
-
-export const CreateCommentSchema = createInsertSchema(comments)
-  .omit({
-    id: true,
-    createdAt: true,
-    authorId: true,
-  })
-  .extend({
-    content: z.string({
-      required_error: "댓글 내용은 필수 입력 사항입니다.",
-    }),
-    noticeId: z.coerce.number({
-      required_error: "공지 아이디가 잘못되었습니다.",
-    }),
-  });
-
-export type CreateCommentSchemaType = z.infer<typeof CreateCommentSchema>;
-
-export const images = pgTable("images", {
-  id: serial("id").primaryKey(),
-  url: text("url").notNull(),
-  key: text("key").notNull(),
-  noticeId: integer("notice_id").references(() => notices.id),
-});
-
-export const imagesRelations = relations(images, ({ one }) => ({
-  notice: one(notices, {
-    fields: [images.noticeId],
-    references: [notices.id],
-  }),
-}));
-
-export const files = pgTable("files", {
-  id: serial("id").primaryKey(),
-  name: text("name").notNull(),
-  url: text("url").notNull(),
-  key: text("key").notNull(),
-  noticeId: integer("notice_id").references(() => notices.id),
-});
-
-export const filesRelations = relations(files, ({ one }) => ({
-  notice: one(notices, {
-    fields: [files.noticeId],
-    references: [notices.id],
-  }),
-}));
 
 export const CreateNoticeSchema = createInsertSchema(notices)
   .omit({
