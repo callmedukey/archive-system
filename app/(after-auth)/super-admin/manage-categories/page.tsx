@@ -1,7 +1,6 @@
 import Link from "next/link";
 
 import SearchInputWithButton from "@/components/shared/search-input-with-button";
-import StandardPagination from "@/components/shared/standard-pagination";
 import { Button } from "@/components/ui/button";
 import {
   Table,
@@ -65,13 +64,6 @@ const page = async () => {
           </TableBody>
         </Table>
       </section>
-      <aside className="mt-6">
-        <StandardPagination
-          currentPage={1}
-          totalPages={10}
-          paginationItemsToDisplay={5}
-        />
-      </aside>
     </div>
   );
 };

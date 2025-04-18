@@ -18,8 +18,7 @@ const page = async () => {
                 <Skeleton className="w-full h-10 rounded-lg" />
                 <Skeleton className="w-full h-10 rounded-lg" />
               </div>
-              <Skeleton className="w-full h-10 rounded-lg mt-6" />
-              <Skeleton className="w-full h-[60vh] rounded-lg mt-6" />
+              <Skeleton className="w-full h-120 rounded-lg mt-6" />
             </>
           }
         >
