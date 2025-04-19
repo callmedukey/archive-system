@@ -1,5 +1,6 @@
 "use client";
 import { format } from "date-fns";
+import { Plus } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import React, { useState, useTransition, useCallback, memo } from "react";
@@ -20,6 +21,7 @@ import renderRolePathname from "@/lib/utils/parse/render-role-pathname";
 import SearchInputWithButton from "./search-input-with-button";
 import SelectWithLabel from "./select-with-label";
 import StandardPagination from "./standard-pagination";
+import { Button } from "../ui/button";
 
 interface NoticesTableProps {
   initialNotices: FetchedNoticesWithoutContent[];
@@ -48,21 +50,20 @@ const NoticesTable = ({
   const [page, setPage] = useState(initialPage);
   const [limit, setLimit] = useState(initialLimit);
 
-  const buildQueryString = (
-    currentPage: number,
-    currentLimit: number,
-    currentSearchQuery: string
-  ) => {
-    const params = new URLSearchParams(searchParams.toString());
-    params.set("page", currentPage.toString());
-    params.set("limit", currentLimit.toString());
-    if (currentSearchQuery) {
-      params.set("query", currentSearchQuery);
-    } else {
-      params.delete("query");
-    }
-    return params.toString();
-  };
+  const buildQueryString = useCallback(
+    (currentPage: number, currentLimit: number, currentSearchQuery: string) => {
+      const params = new URLSearchParams(searchParams.toString());
+      params.set("page", currentPage.toString());
+      params.set("limit", currentLimit.toString());
+      if (currentSearchQuery) {
+        params.set("query", currentSearchQuery);
+      } else {
+        params.delete("query");
+      }
+      return params.toString();
+    },
+    [searchParams]
+  );
 
   const handleNavigation = useCallback(
     (newPage: number, newLimit: number, newSearchQuery: string) => {
@@ -71,7 +72,7 @@ const NoticesTable = ({
         router.push(`${pathname}?${queryString}`);
       });
     },
-    [searchParams, router, pathname]
+    [router, pathname, buildQueryString]
   );
 
   const handlePageChange = useCallback(
@@ -101,29 +102,37 @@ const NoticesTable = ({
   const totalPages = Math.ceil(totalCount / limit);
   return (
     <div>
-      <aside className="grid grid-cols-2 gap-4 items-baseline max-w-xs mt-6">
-        <SearchInputWithButton
-          value={query}
-          placeholder="제목 또는 내용 검색..."
-          onChange={(e) => setQuery(e.target.value)}
-          disabled={isPending}
-          onSearch={handleSearch}
-        />
-        <SelectWithLabel
-          label=""
-          disabled={isPending}
-          disableLabel
-          value={limit.toString()}
-          onChange={handleLimitChange}
-          options={[
-            { label: "10개씩", value: "10" },
-            { label: "20개씩", value: "20" },
-            { label: "50개씩", value: "50" },
-            { label: "100개씩", value: "100" },
-          ]}
-          name="limit"
-        />
-      </aside>
+      <div className="flex justify-between items-center mt-6">
+        <aside className="grid grid-cols-2 gap-4 items-baseline max-w-xs">
+          <SearchInputWithButton
+            value={query}
+            placeholder="제목 또는 내용 검색..."
+            onChange={(e) => setQuery(e.target.value)}
+            disabled={isPending}
+            onSearch={handleSearch}
+          />
+          <SelectWithLabel
+            label=""
+            disabled={isPending}
+            disableLabel
+            value={limit.toString()}
+            onChange={handleLimitChange}
+            options={[
+              { label: "10개씩", value: "10" },
+              { label: "20개씩", value: "20" },
+              { label: "50개씩", value: "50" },
+              { label: "100개씩", value: "100" },
+            ]}
+            name="limit"
+          />
+        </aside>
+        <Button asChild>
+          <Link href={`${pathname}/new`}>
+            <Plus />
+            <span className="hidden sm:block">공지 작성</span>
+          </Link>
+        </Button>
+      </div>
       <section className="mt-6 relative">
         <Table className="**:text-center">
           <TableHeader className="bg-primary-foreground">

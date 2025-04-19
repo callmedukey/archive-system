@@ -41,17 +41,17 @@ const DashboardMainClient = ({ regions, role }: DashboardMainClientProps) => {
     });
   };
 
-  const data = [
-    ["월별보고", 3, 0, 2, 0, 1, 4, 0, 2, 0, 3, 0, 1],
-    ["활동계획", 0, 2, 3, 0, 4, 0, 1, 0, 5, 0, 2, 0],
-    ["진행계획", 1, 0, 0, 3, 0, 2, 0, 4, 0, 1, 0, 5],
-    ["활동보고", 0, 5, 0, 0, 2, 3, 0, 1, 0, 4, 0, 2],
+  const initialPlaceholderData = [
+    ["월별보고", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+    ["활동계획", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+    ["진행계획", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+    ["활동보고", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
   ];
 
   // Calculate monthly totals across all categories
   const chartData = Array.from({ length: 12 }, (_, monthIndex) => {
     // For each month, sum values across all categories
-    const monthTotal = data.reduce(
+    const monthTotal = initialPlaceholderData.reduce(
       (sum, category) => sum + Number(category[monthIndex + 1]),
       0
     );
@@ -81,7 +81,7 @@ const DashboardMainClient = ({ regions, role }: DashboardMainClientProps) => {
               label: region.name,
               value: region.id,
             }))}
-            value={selectedRegion?.id}
+            value={selectedRegion?.id || ""}
             onChange={(value) => {
               const region = regions.find((region) => region.id === value);
               setSelectedRegion(region || null);
@@ -101,7 +101,7 @@ const DashboardMainClient = ({ regions, role }: DashboardMainClientProps) => {
               label: island.name,
               value: island.id,
             }))}
-            value={selectedIsland?.id}
+            value={selectedIsland?.id || ""}
             onChange={(value) => {
               const island = selectableIslands.find(
                 (island) => island.id === value
@@ -131,7 +131,7 @@ const DashboardMainClient = ({ regions, role }: DashboardMainClientProps) => {
           </TableRow>
         </TableHeader>
         <TableBody className="**:text-center">
-          {data.map((row) => (
+          {initialPlaceholderData.map((row) => (
             <TableRow key={row[0]}>
               {row.map((cell, i) => (
                 <TableCell key={row[0] + i.toString()}>{cell}</TableCell>

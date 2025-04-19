@@ -6,10 +6,7 @@ const page = () => {
   return (
     <div>
       <h1>공지사항 작성</h1>
-      <NoticeForm
-        variant="create"
-        onSuccessRedirectUrl="/super-admin/manage-notice"
-      />
+      <NoticeForm variant="create" onSuccessRedirectUrl="/super-admin/notice" />
     </div>
   );
 };
