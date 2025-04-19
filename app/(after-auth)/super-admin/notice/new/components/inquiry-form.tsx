@@ -8,39 +8,35 @@ import React, { useState, useTransition } from "react";
 import { toast } from "sonner";
 
 import { deleteFiles } from "@/app/(after-auth)/super-admin/actions/delete-files";
+import {
+  createInquiry,
+  editInquiry,
+} from "@/app/(after-auth)/user/inquiries/action/create-inquiry";
 import ButtonWithLoading from "@/components/shared/button-with-loading";
-import CheckboxWithLabel from "@/components/shared/chackbox-with-label";
 import DownloadButton from "@/components/shared/download-button";
 import Tiptap from "@/components/shared/tiptap";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
-import { NewNotice } from "@/db/schemas";
+import { NewInquiry } from "@/db/schemas";
 import { getFileKeyFromUrl } from "@/lib/image-url";
 import { UploadButton } from "@/lib/utils/uploadthing";
 import { ActionResponse } from "@/types/action";
 
-import {
-  createNotice,
-  editNotice,
-} from "../../../app/(after-auth)/super-admin/notice/new/action/create-notice";
-
-interface NoticeFormProps {
+interface InquiryFormProps {
   onSuccessRedirectUrl: string;
   title?: string;
   content?: string;
-  isPinned?: boolean;
   imageUrls?: { url: string; key: string }[];
   fileUrls?: { name: string; url: string; key: string }[];
   variant: "create" | "edit";
   id?: number;
 }
 
-const NoticeForm = ({ onSuccessRedirectUrl, ...props }: NoticeFormProps) => {
+const InquiryForm = ({ onSuccessRedirectUrl, ...props }: InquiryFormProps) => {
   const router = useRouter();
   const [title, setTitle] = useState(props.title || "");
   const [content, setContent] = useState(props.content || "");
-  const [isPinned, setIsPinned] = useState(props.isPinned || false);
   const [imageUrls, setImageUrls] = useState<{ url: string; key: string }[]>(
     props.imageUrls || []
   );
@@ -73,13 +69,12 @@ const NoticeForm = ({ onSuccessRedirectUrl, ...props }: NoticeFormProps) => {
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    let result: ActionResponse<NewNotice>;
+    let result: ActionResponse<NewInquiry>;
     startTransition(async () => {
       if (props.variant === "create") {
-        result = await createNotice({
+        result = await createInquiry({
           title,
           content,
-          isPinned,
           images: imageUrls,
           files: fileUrls,
         });
@@ -88,11 +83,10 @@ const NoticeForm = ({ onSuccessRedirectUrl, ...props }: NoticeFormProps) => {
           toast.error("공지 아이디가 없습니다.");
           return;
         }
-        result = await editNotice({
+        result = await editInquiry({
           id: props.id,
           title,
           content,
-          isPinned,
           images: imageUrls,
           files: fileUrls,
         });
@@ -111,7 +105,7 @@ const NoticeForm = ({ onSuccessRedirectUrl, ...props }: NoticeFormProps) => {
       initial={{ opacity: 0, y: 50 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
-      className="mt-6"
+      className="mt-6 max-w-[calc(100vw-16rem)] mx-auto pb-6"
       onSubmit={handleSubmit}
     >
       <Input
@@ -164,7 +158,7 @@ const NoticeForm = ({ onSuccessRedirectUrl, ...props }: NoticeFormProps) => {
                 key={key}
                 className="border-2 p-2 rounded-lg shrink-0 flex items-center gap-2 overflow-clip"
               >
-                <DownloadButton url={url} filename={name} />
+                <DownloadButton url={url} filename={name} className="w-fit" />
                 <Button
                   type="button"
                   variant="outline"
@@ -258,17 +252,6 @@ const NoticeForm = ({ onSuccessRedirectUrl, ...props }: NoticeFormProps) => {
           }}
         />
       </div>
-      <div className="flex items-center gap-2 mt-6 justify-center">
-        <CheckboxWithLabel
-          label="공지 고정하기"
-          checked={isPinned}
-          name="isPinned"
-          disabled={isPending}
-          className="size-5 border-black/60"
-          labelClassName="text-base font-medium"
-          onCheckedChange={() => setIsPinned(!isPinned)}
-        />
-      </div>
       <div className="flex justify-center items-center">
         <ButtonWithLoading
           type="submit"
@@ -284,4 +267,4 @@ const NoticeForm = ({ onSuccessRedirectUrl, ...props }: NoticeFormProps) => {
   );
 };
 
-export default NoticeForm;
+export default InquiryForm;

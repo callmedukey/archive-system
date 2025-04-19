@@ -9,7 +9,13 @@ import { createComment } from "@/app/(after-auth)/actions/create-comment";
 import ButtonWithLoading from "./button-with-loading";
 import { Textarea } from "../ui/textarea";
 
-const FormCreateComment = ({ noticeId }: { noticeId: number }) => {
+const FormCreateComment = ({
+  noticeId,
+  inquiryId,
+}: {
+  noticeId?: number;
+  inquiryId?: number;
+}) => {
   const [state, action, isPending] = useActionState(createComment, {
     success: false,
     message: "",
@@ -23,11 +29,12 @@ const FormCreateComment = ({ noticeId }: { noticeId: number }) => {
 
   return (
     <form className="flex items-start space-x-3" action={action}>
-      {/* <FaRegUserCircle className="w-8 h-8 text-gray-400 mt-1" /> */}
       <CircleUserRound className="w-8 h-8 text-gray-400 mt-1" />{" "}
-      {/* Placeholder icon */}
       <div className="flex-1">
-        <input type="hidden" name="noticeId" value={noticeId} />
+        {noticeId && <input type="hidden" name="noticeId" value={noticeId} />}
+        {inquiryId && (
+          <input type="hidden" name="inquiryId" value={inquiryId} />
+        )}
         <Textarea
           className="w-full p-2 border rounded focus:ring-blue-500 focus:border-blue-500"
           rows={3}
@@ -39,7 +46,7 @@ const FormCreateComment = ({ noticeId }: { noticeId: number }) => {
         />
         <div className="flex justify-end mt-2">
           <ButtonWithLoading
-            className="px-4 py-2 bg-gray-800 text-white text-sm font-medium rounded hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500"
+            className="px-4 py-2  text-white text-sm font-medium rounded focus:outline-none focus:ring-2 focus:ring-offset-2"
             isLoading={isPending}
             disabled={isPending}
           >

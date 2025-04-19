@@ -123,7 +123,8 @@ const Tiptap = ({
     },
     editorProps: {
       attributes: {
-        class: "m-5 focus:outline-none min-h-[300px]",
+        class:
+          "m-5 focus:outline-none min-h-[300px] max-w-[calc(100vw-16rem)] mx-auto",
       },
     },
   });
@@ -440,9 +441,11 @@ const Tiptap = ({
       <div className="p-4">
         <EditorContent
           editor={editor}
-          style={{ whiteSpace: "pre-line" }}
+          style={{
+            whiteSpace: "pre-line",
+          }}
           className={cn(
-            "border border-gray-300 rounded p-2",
+            "border border-gray-300 rounded p-2 ",
             disabled && "opacity-50"
           )}
           contentEditable={!disabled}

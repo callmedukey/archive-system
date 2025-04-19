@@ -14,6 +14,7 @@ import { Role, users, Island } from "./auth";
 import { comments } from "./comments";
 import { files } from "./files";
 import { images } from "./images";
+import { notifications } from "./notifications";
 
 export const notices = pgTable("notices", {
   id: serial("id").primaryKey(),
@@ -33,6 +34,7 @@ export const noticesRelations = relations(notices, ({ many, one }) => ({
   images: many(images),
   files: many(files),
   comments: many(comments),
+  notifications: many(notifications),
   author: one(users, {
     fields: [notices.authorId],
     references: [users.id],
@@ -113,4 +115,28 @@ export interface FetchedNotice extends Notice {
       island: Island;
     }[];
   } | null; // Allow null author based on the second query's simpler fetch
+}
+
+export type FetchedNoticesWithoutContent = Omit<FetchedNotice, "content">;
+
+export interface SingleNotice extends FetchedNotice {
+  images: {
+    url: string;
+    key: string;
+  }[];
+  files: {
+    name: string;
+    url: string;
+    key: string;
+  }[];
+  comments: {
+    id: number;
+    content: string;
+    createdAt: Date;
+    author: {
+      id: string;
+      role: Role;
+      username: string;
+    };
+  }[];
 }

@@ -23,7 +23,7 @@ interface InquiriesWrapperProps {
 const InquiriesWrapper = async ({
   searchTerm,
   page,
-  limit,
+  limit = 10,
   orderBy,
   children,
 }: InquiriesWrapperProps) => {

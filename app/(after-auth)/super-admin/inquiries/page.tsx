@@ -1,10 +1,10 @@
 import { Suspense } from "react";
 
-import ClientInquiriesTable from "@/components/shared/admin/client-inquiries-table";
+import ClientInquiriesTable from "@/components/shared/client-inquiries-table";
 import InquiriesWrapper from "@/components/shared/admin/server/inquiries-wapper";
 import { Skeleton } from "@/components/ui/skeleton";
 
-interface ManageInquiriesPageProps {
+interface InquiriesPageProps {
   searchParams: Promise<{
     page?: string;
     limit?: string;
@@ -13,7 +13,7 @@ interface ManageInquiriesPageProps {
   }>;
 }
 
-const page = async ({ searchParams }: ManageInquiriesPageProps) => {
+const page = async ({ searchParams }: InquiriesPageProps) => {
   const { page, limit, orderBy, searchTerm } = await searchParams;
 
   const safePage = Math.max(1, page ? parseInt(page) : 1);

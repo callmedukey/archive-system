@@ -13,14 +13,16 @@ import {
   Table,
   TableCell,
 } from "@/components/ui/table";
-import { FetchedNotice, Role } from "@/db/schemas";
+import { FetchedNoticesWithoutContent, Role } from "@/db/schemas";
+import renderRoleName from "@/lib/utils/parse/render-role-name";
+import renderRolePathname from "@/lib/utils/parse/render-role-pathname";
 
-import SearchInputWithButton from "../search-input-with-button";
-import SelectWithLabel from "../select-with-label";
-import StandardPagination from "../standard-pagination";
+import SearchInputWithButton from "./search-input-with-button";
+import SelectWithLabel from "./select-with-label";
+import StandardPagination from "./standard-pagination";
 
-interface AdminsNoticesTableProps {
-  initialNotices: FetchedNotice[];
+interface NoticesTableProps {
+  initialNotices: FetchedNoticesWithoutContent[];
   role: Role;
   totalCount: number;
   initialPage?: number;
@@ -28,14 +30,14 @@ interface AdminsNoticesTableProps {
   initialQuery?: string;
 }
 
-const AdminsNoticesTable = ({
+const NoticesTable = ({
   initialNotices,
   role,
   totalCount,
   initialPage = 1,
   initialLimit = 10,
   initialQuery = "",
-}: AdminsNoticesTableProps) => {
+}: NoticesTableProps) => {
   const [isPending, startTransition] = useTransition();
 
   const router = useRouter();
@@ -92,7 +94,7 @@ const AdminsNoticesTable = ({
   };
 
   const totalPages = Math.ceil(totalCount / limit);
-
+  console.log(initialNotices);
   return (
     <div>
       <aside className="grid grid-cols-2 gap-4 items-baseline max-w-xs mt-6">
@@ -132,13 +134,15 @@ const AdminsNoticesTable = ({
             {initialNotices.map((notice) => (
               <TableRow key={notice.id} className="*:py-4">
                 <TableCell>
-                  {role === Role.SUPERADMIN
-                    ? "총괄관리자"
-                    : `${notice.author?.islands?.[0]?.island?.name} 관리자`}
+                  {renderRoleName(
+                    role,
+                    notice.author?.role as Role,
+                    notice.author?.islands?.[0]?.island?.name
+                  )}
                 </TableCell>
                 <TableCell className="hover:underline">
                   <Link
-                    href={`/super-admin/manage-notice/${notice.id}`}
+                    href={`/${renderRolePathname(role)}/notice/${notice.id}`}
                     prefetch={false}
                   >
                     {notice.title}
@@ -180,4 +184,4 @@ const AdminsNoticesTable = ({
   );
 };
 
-export default AdminsNoticesTable;
+export default NoticesTable;

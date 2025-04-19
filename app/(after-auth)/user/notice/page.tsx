@@ -1,11 +1,11 @@
 import React, { Suspense } from "react";
 
-import AdminsNoticesTable from "@/components/shared/admin/admins-notices-table";
-import NoticeWrapper from "@/components/shared/server/notice-wrapper";
+import NoticesTable from "@/components/shared/notices-table";
+import NoticesWrapper from "@/components/shared/server/notices-wrapper";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Role } from "@/db/schemas";
 
-interface ManageNoticePageProps {
+interface UserNoticePageProps {
   searchParams: Promise<{
     page?: string;
     limit?: string;
@@ -13,7 +13,7 @@ interface ManageNoticePageProps {
   }>;
 }
 
-const page = async ({ searchParams }: ManageNoticePageProps) => {
+const page = async ({ searchParams }: UserNoticePageProps) => {
   const { page: pageParam, limit: limitParam, query } = await searchParams;
 
   const currentPage = Math.max(1, pageParam ? parseInt(pageParam) : 1);
@@ -22,7 +22,6 @@ const page = async ({ searchParams }: ManageNoticePageProps) => {
     Math.min(100, limitParam ? parseInt(limitParam) : 10)
   );
   const searchQuery = query ?? "";
-
   return (
     <div>
       <h1>공지사항</h1>
@@ -37,23 +36,23 @@ const page = async ({ searchParams }: ManageNoticePageProps) => {
           </>
         }
       >
-        <NoticeWrapper
-          role={Role.SUPERADMIN}
+        <NoticesWrapper
+          role={Role.USER}
           page={currentPage}
           limit={limit}
           query={searchQuery}
         >
           {(fetchedNotices, totalCount) => (
-            <AdminsNoticesTable
+            <NoticesTable
               initialNotices={fetchedNotices ?? []}
               totalCount={totalCount ?? 0}
               initialPage={currentPage}
               initialLimit={limit}
               initialQuery={searchQuery}
-              role={Role.SUPERADMIN}
+              role={Role.USER}
             />
           )}
-        </NoticeWrapper>
+        </NoticesWrapper>
       </Suspense>
     </div>
   );

@@ -27,12 +27,12 @@ const layout = async ({ children }: { children: React.ReactNode }) => {
     },
     {
       label: "문의사항",
-      href: "/user/manage-inquiries",
+      href: "/user/inquiries",
       icon: <MessageCircle />,
     },
     {
       label: "자료 관리",
-      href: "/user/manage-documents",
+      href: "/user/documents",
       icon: <BookText />,
     },
     {

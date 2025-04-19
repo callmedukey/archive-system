@@ -35,27 +35,27 @@ const layout = async ({ children }: { children: React.ReactNode }) => {
     },
     {
       label: "문의사항",
-      href: "/super-admin/manage-inquiries",
+      href: "/super-admin/inquiries",
       icon: <MessageCircle />,
     },
     {
       label: "사용자 관리",
-      href: "/super-admin/manage-users",
+      href: "/super-admin/users",
       icon: <UserCog />,
     },
     {
       label: "자료 관리",
-      href: "/super-admin/manage-documents",
+      href: "/super-admin/documents",
       icon: <BookText />,
     },
     {
       label: "카테고리 및 양식관리",
-      href: "/super-admin/manage-categories",
+      href: "/super-admin/categories",
       icon: <BookOpenText />,
     },
     {
       label: "공지사항 관리",
-      href: "/super-admin/manage-notice",
+      href: "/super-admin/notice",
       icon: <ScrollText />,
     },
   ];

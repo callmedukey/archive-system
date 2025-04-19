@@ -1,6 +1,6 @@
 "use server";
 
-import { eq } from "drizzle-orm";
+import { eq, and, or, inArray } from "drizzle-orm";
 
 import { auth } from "@/auth";
 import { db } from "@/db";
@@ -11,6 +11,11 @@ import {
   images,
   NewNotice,
   notices,
+  Role,
+  notifications,
+  users,
+  User,
+  usersToIslands,
 } from "@/db/schemas";
 import { ActionResponse } from "@/types/action";
 
@@ -65,6 +70,87 @@ export const createNotice = async (
   );
 
   await Promise.all([...imagePromises, ...filePromises]);
+
+  //NOTIFICATIONS
+  if (session.user.role === Role.SUPERADMIN) {
+    const allUsers = await db.query.users.findMany();
+
+    const notificationValues = allUsers
+      .filter((user) => user.id !== session.user.id)
+      .map((user) => ({
+        title: `새 공지사항: ${title}`,
+        content: `${title} - 새 공지사항이 등록되었습니다.`,
+        userId: user.id,
+        noticeId: noticeId,
+      }));
+
+    if (notificationValues.length > 0) {
+      await db.insert(notifications).values(notificationValues);
+    }
+  } else if (session.user.role === Role.ADMIN) {
+    // Find islands associated with the admin
+    const adminIslandRelations = await db.query.usersToIslands.findMany({
+      where: eq(usersToIslands.userId, session.user.id),
+      columns: { islandId: true },
+    });
+    const adminIslandIds = adminIslandRelations.map(
+      (relation) => relation.islandId
+    );
+
+    if (adminIslandIds.length > 0) {
+      // Find users and admins in the same islands
+      const usersInSameIslandsQuery = db
+        .select({ user: users })
+        .from(usersToIslands)
+        .innerJoin(users, eq(usersToIslands.userId, users.id))
+        .where(
+          and(
+            inArray(usersToIslands.islandId, adminIslandIds),
+            or(eq(users.role, Role.USER), eq(users.role, Role.ADMIN))
+          )
+        );
+
+      // Find all superadmins
+      const superAdminsQuery = db.query.users.findMany({
+        where: eq(users.role, Role.SUPERADMIN),
+      });
+
+      const [usersInSameIslands, superAdmins] = await Promise.all([
+        usersInSameIslandsQuery,
+        superAdminsQuery,
+      ]);
+
+      // Combine recipients, ensuring uniqueness and excluding the author
+      const recipients = new Map<string, User>();
+
+      usersInSameIslands.forEach(({ user }) => {
+        if (user.id !== session.user.id) {
+          recipients.set(user.id, user);
+        }
+      });
+
+      superAdmins.forEach((user) => {
+        if (user.id !== session.user.id) {
+          recipients.set(user.id, user);
+        }
+      });
+
+      // Create notification values
+      const notificationValues = Array.from(recipients.values()).map(
+        (user) => ({
+          title: `새 공지사항: ${title}`,
+          content: `${title} - 새 공지사항이 등록되었습니다.`,
+          userId: user.id,
+          noticeId: noticeId,
+        })
+      );
+
+      // Insert notifications
+      if (notificationValues.length > 0) {
+        await db.insert(notifications).values(notificationValues);
+      }
+    }
+  }
 
   return {
     success: true,

@@ -3,7 +3,7 @@ import { integer, timestamp, text, pgTable, serial } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
-import { users } from "./auth";
+import { User, users } from "./auth";
 import { inquiries } from "./inquiries";
 import { notices } from "./notices";
 
@@ -33,6 +33,10 @@ export const commentsRelations = relations(comments, ({ one }) => ({
     fields: [comments.noticeId],
     references: [notices.id],
   }),
+  inquiry: one(inquiries, {
+    fields: [comments.inquiryId],
+    references: [inquiries.id],
+  }),
 }));
 
 export const CreateCommentSchema = createInsertSchema(comments)
@@ -45,9 +49,31 @@ export const CreateCommentSchema = createInsertSchema(comments)
     content: z.string({
       required_error: "댓글 내용은 필수 입력 사항입니다.",
     }),
-    noticeId: z.coerce.number({
-      required_error: "공지 아이디가 잘못되었습니다.",
-    }),
-  });
+    noticeId: z.coerce
+      .number({
+        required_error: "공지 아이디가 잘못되었습니다.",
+      })
+      .optional(),
+    inquiryId: z.coerce
+      .number({
+        required_error: "문의 아이디가 잘못되었습니다.",
+      })
+      .optional(),
+  })
+  .refine(
+    (data) => {
+      return data.noticeId || data.inquiryId;
+    },
+    {
+      path: ["noticeId", "inquiryId"],
+      message: "공지 또는 문의 아이디를 입력해주세요.",
+    }
+  );
 
 export type CreateCommentSchemaType = z.infer<typeof CreateCommentSchema>;
+
+export type Comment = typeof comments.$inferSelect;
+
+export type CommentWithAuthor = Comment & {
+  author: User;
+};

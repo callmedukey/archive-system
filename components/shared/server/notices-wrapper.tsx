@@ -4,7 +4,7 @@ import React from "react";
 import { auth } from "@/auth";
 import { db } from "@/db";
 import {
-  FetchedNotice,
+  FetchedNoticesWithoutContent,
   Role,
   notices,
   users,
@@ -17,12 +17,12 @@ interface NoticeWrapperProps {
   limit: number;
   query: string;
   children: (
-    fetchedNotices: FetchedNotice[] | null,
+    fetchedNotices: FetchedNoticesWithoutContent[] | null,
     totalCount: number
   ) => React.ReactNode;
 }
 
-const NoticeWrapper = async ({
+const NoticesWrapper = async ({
   role,
   page,
   limit,
@@ -96,6 +96,15 @@ const NoticeWrapper = async ({
 
   const [fetchedNotices, countResult] = await Promise.all([
     db.query.notices.findMany({
+      columns: {
+        id: true,
+        title: true,
+        createdAt: true,
+        updatedAt: true,
+        isPinned: true,
+        viewCount: true,
+        authorId: true,
+      },
       with: {
         author: {
           columns: {
@@ -126,4 +135,4 @@ const NoticeWrapper = async ({
   return children(fetchedNotices, totalCount);
 };
 
-export default NoticeWrapper;
+export default NoticesWrapper;

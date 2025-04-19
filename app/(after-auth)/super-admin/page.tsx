@@ -2,8 +2,8 @@ import React, { Suspense } from "react";
 
 import { Skeleton } from "@/components/ui/skeleton";
 
-import DashboardInfoTableCard from "./components/dashboard-info-table-card";
-import DashboardMainWrapper from "./components/dashboard-main-wrapper";
+import DashboardInfoTableCard from "../../../components/shared/dashboard-info-table-card";
+import DashboardMainWrapper from "../../../components/shared/dashboard-main-wrapper";
 const page = async () => {
   return (
     <div className="pb-6">

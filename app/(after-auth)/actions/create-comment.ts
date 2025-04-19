@@ -9,7 +9,6 @@ import {
   comments,
   CreateCommentSchema,
   CreateCommentSchemaType,
-  notices,
   users,
 } from "@/db/schemas";
 import { ActionResponse } from "@/types/action";
@@ -43,29 +42,60 @@ export async function createComment(
     return response;
   }
 
-  const { content, noticeId } = result.data;
+  const { content, noticeId, inquiryId } = result.data;
 
-  const [user, notice] = await Promise.all([
+  const promises = [
     db.query.users.findFirst({
       where: eq(users.id, session.user.id),
     }),
-    db.query.notices.findFirst({
-      where: eq(notices.id, noticeId),
-    }),
-  ]);
+  ];
 
-  if (!user || !notice) {
-    response.message = "존재하지 않는 사용자 또는 공지입니다.";
+  if (noticeId) {
+    promises.push(
+      db.query.users.findFirst({
+        where: eq(users.id, session.user.id),
+      })
+    );
+  }
+
+  if (inquiryId) {
+    promises.push(
+      db.query.users.findFirst({
+        where: eq(users.id, session.user.id),
+      })
+    );
+  }
+
+  const [user] = await Promise.all(promises);
+
+  if (!user) {
+    response.message = "존재하지 않는 사용자입니다.";
     return response;
   }
 
-  await db.insert(comments).values({
-    content,
-    noticeId,
-    authorId: user.id,
-  });
+  if (noticeId) {
+    await db.insert(comments).values({
+      content,
+      noticeId,
+      authorId: user.id,
+    });
+  }
 
-  revalidatePath(`/super-admin/manage-notice/${noticeId}`);
+  if (inquiryId) {
+    await db.insert(comments).values({
+      content,
+      inquiryId,
+      authorId: user.id,
+    });
+  }
+
+  if (noticeId) {
+    revalidatePath(`/user/notice/${noticeId}`);
+  }
+
+  if (inquiryId) {
+    revalidatePath(`/user/inquiries/${inquiryId}`);
+  }
 
   response.success = true;
   response.message = "댓글이 성공적으로 작성되었습니다.";
@@ -73,6 +103,7 @@ export async function createComment(
   response.inputs = {
     content: "",
     noticeId: inputs.noticeId,
+    inquiryId: inputs.inquiryId,
   };
   return response;
 }

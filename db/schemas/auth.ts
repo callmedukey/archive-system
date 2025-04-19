@@ -12,6 +12,7 @@ import type { AdapterAccountType } from "next-auth/adapters";
 import { enumToPgEnum } from "@/lib/utils/db/enum-to-pg-enum";
 
 import { notices } from "./notices";
+import { notifications } from "./notifications";
 
 export enum Role {
   USER = "user",
@@ -56,6 +57,7 @@ export const usersRelations = relations(users, ({ many }) => ({
   islands: many(usersToIslands),
   regions: many(usersToRegions),
   notices: many(notices),
+  notifications: many(notifications),
 }));
 
 export const islands = pgTable("island", {
