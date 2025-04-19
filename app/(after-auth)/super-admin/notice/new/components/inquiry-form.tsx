@@ -70,8 +70,6 @@ const InquiryForm = ({ onSuccessRedirectUrl, ...props }: InquiryFormProps) => {
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     let result: ActionResponse<NewInquiry>;
-    console.log(content);
-    return;
     startTransition(async () => {
       if (props.variant === "create") {
         result = await createInquiry({

@@ -14,6 +14,9 @@ interface NotificationsPageProps {
 
 const page = async ({ searchParams }: NotificationsPageProps) => {
   const notifications = await getNotifications();
+  const hasUnreadNotifications = notifications.some(
+    (notification) => !notification.isRead
+  );
   // Removed unused variables: page, limit, isRead
   // const { page, limit, isRead } = await searchParams;
   await searchParams; // Await the promise even if not destructuring
@@ -27,9 +30,12 @@ const page = async ({ searchParams }: NotificationsPageProps) => {
             새로운 알림 {notifications.length}개
           </h2>
         </div>
-        <Button className="rounded-lg">모두 읽음처리</Button>
+        {hasUnreadNotifications && (
+          <Button className="rounded-lg" disabled={!hasUnreadNotifications}>
+            모두 읽음처리
+          </Button>
+        )}
       </div>
-
       <div className="grid gap-4">
         {notifications.map((notification) => {
           return (

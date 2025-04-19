@@ -22,7 +22,6 @@ export const createInquiry = async (
   data: NewInquiry
 ): Promise<ActionResponse<NewInquiry>> => {
   const result = CreateInquirySchema.safeParse(data);
-  console.log(result);
   if (!result.success) {
     return {
       success: false,
