@@ -1,6 +1,6 @@
 "use server";
 
-import { eq, and, or, exists } from "drizzle-orm";
+import { eq, and, or, inArray } from "drizzle-orm";
 
 import { auth } from "@/auth";
 import { db } from "@/db";
@@ -22,7 +22,7 @@ export const createInquiry = async (
   data: NewInquiry
 ): Promise<ActionResponse<NewInquiry>> => {
   const result = CreateInquirySchema.safeParse(data);
-
+  console.log(result);
   if (!result.success) {
     return {
       success: false,
@@ -78,16 +78,13 @@ export const createInquiry = async (
         userIslandLink
           ? and(
               eq(users.role, Role.ADMIN),
-              exists(
+              // Check if user's ID is in the list of user IDs for the target island
+              inArray(
+                users.id,
                 db
-                  .select()
+                  .select({ userId: usersToIslands.userId })
                   .from(usersToIslands)
-                  .where(
-                    and(
-                      eq(usersToIslands.userId, users.id),
-                      eq(usersToIslands.islandId, userIslandLink.islandId)
-                    )
-                  )
+                  .where(eq(usersToIslands.islandId, userIslandLink.islandId))
               )
             )
           : undefined,

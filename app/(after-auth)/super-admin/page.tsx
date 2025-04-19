@@ -1,6 +1,8 @@
 import React, { Suspense } from "react";
 
+import DashboardMainClient from "@/components/shared/dashboard-main-client";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Role } from "@/db/schemas";
 
 import DashboardInfoTableCard from "../../../components/shared/dashboard-info-table-card";
 import DashboardMainWrapper from "../../../components/shared/dashboard-main-wrapper";
@@ -75,7 +77,11 @@ const page = async () => {
             </>
           }
         >
-          <DashboardMainWrapper />
+          <DashboardMainWrapper role={Role.SUPERADMIN}>
+            {(regions) => (
+              <DashboardMainClient regions={regions} role={Role.SUPERADMIN} />
+            )}
+          </DashboardMainWrapper>
         </Suspense>
       </section>
       <aside className="grid lg:grid-cols-3 gap-2 mt-6">

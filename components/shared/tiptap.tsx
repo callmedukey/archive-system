@@ -36,8 +36,6 @@ import {
 } from "lucide-react";
 import { ChangeEvent } from "react";
 
-import { cn } from "@/lib/utils";
-
 const toolbarButtonClass =
   "p-2 rounded hover:bg-gray-100 transition-colors flex items-center justify-center";
 const activeButtonClass = "bg-gray-200 text-blue-600";
@@ -73,9 +71,17 @@ const Tiptap = ({
   setContent: (content: string) => void;
   disabled?: boolean;
 }) => {
+  const ZWS = "\u200B"; // Zero-width space character
+
+  // Ensure content starts with a zero-width space for IME workaround
+  const initialContent =
+    content && !content.startsWith(ZWS) && !content.startsWith("<p>" + ZWS)
+      ? ZWS + content // Prepend if ZWS is missing
+      : content || ZWS; // Add ZWS if content is empty, otherwise use existing content
+
   const editor = useEditor({
     extensions: [
-      StarterKit,
+      StarterKit.configure(),
       TextAlign.configure({
         types: ["heading", "paragraph"],
       }),
@@ -116,10 +122,23 @@ const Tiptap = ({
       ExtendedTextStyle,
       Color,
     ],
-    content: content,
+    content: initialContent, // Use content with prepended ZWS
     immediatelyRender: false,
     onUpdate: ({ editor }) => {
-      setContent(editor.getHTML());
+      const currentContent = editor.getHTML();
+      // Check if the editor is completely empty after update
+      if (currentContent === "<p></p>" || currentContent === "") {
+        // Re-insert ZWS if empty, prevent triggering another update
+        editor.chain().setContent(ZWS, false).run();
+        // Call setContent with empty string when editor is cleared
+        setContent("");
+      } else {
+        // Ensure ZWS isn't accidentally sent back if it's the *only* content
+        const outputContent =
+          currentContent === `<p>${ZWS}</p>` ? "" : currentContent;
+        // Call setContent with the actual content (or empty string if only ZWS)
+        setContent(outputContent);
+      }
     },
     editorProps: {
       attributes: {
@@ -189,7 +208,7 @@ const Tiptap = ({
           className={`${toolbarButtonClass} ${
             editor.isActive("heading", { level: 3 }) ? activeButtonClass : ""
           }`}
-          title="Heading 2"
+          title="Heading 3"
         >
           <Heading3 className="h-4 w-4" />
         </button>
@@ -384,8 +403,6 @@ const Tiptap = ({
         {/* Divider */}
         <div className="h-6 w-px bg-gray-300 mx-1"></div>
 
-        {/* Font Size Dropdown */}
-
         {/* Color Picker */}
         <div className="relative inline-block">
           <input
@@ -439,17 +456,7 @@ const Tiptap = ({
 
       {/* Editor Content */}
       <div className="p-4">
-        <EditorContent
-          editor={editor}
-          style={{
-            whiteSpace: "pre-line",
-          }}
-          className={cn(
-            "border border-gray-300 rounded p-2 ",
-            disabled && "opacity-50"
-          )}
-          contentEditable={!disabled}
-        />
+        <EditorContent editor={editor} contentEditable={!disabled} />
       </div>
     </div>
   );

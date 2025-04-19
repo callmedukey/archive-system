@@ -66,12 +66,22 @@ export const CreateInquirySchema = createInsertSchema(inquiries)
         }),
       })
     ),
-    title: z.string({
-      required_error: "제목은 필수 입력 사항입니다.",
-    }),
-    content: z.string({
-      required_error: "내용은 필수 입력 사항입니다.",
-    }),
+    title: z
+      .string({
+        required_error: "제목은 필수 입력 사항입니다.",
+      })
+      .trim()
+      .min(1, {
+        message: "제목은 필수 입력 사항입니다.",
+      }),
+    content: z
+      .string({
+        required_error: "내용은 필수 입력 사항입니다.",
+      })
+      .trim()
+      .min(1, {
+        message: "내용은 필수 입력 사항입니다.",
+      }),
   });
 
 export type NewInquiry = z.infer<typeof CreateInquirySchema>;

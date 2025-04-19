@@ -39,3 +39,5 @@ export const notificationRelations = relations(notifications, ({ one }) => ({
     references: [inquiries.id],
   }),
 }));
+
+export type Notification = typeof notifications.$inferSelect;

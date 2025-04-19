@@ -4,7 +4,7 @@ import { format } from "date-fns";
 import { MailQuestion } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { useState, useTransition } from "react";
+import { useState, useTransition, useCallback, memo } from "react";
 import { toast } from "sonner";
 
 import { Skeleton } from "@/components/ui/skeleton";
@@ -43,8 +43,8 @@ export default function ClientInquiriesTable({
   withAddButton = false,
 }: ClientInquiriesTableProps) {
   const router = useRouter();
-  const pathname = usePathname(); // Use pathname for navigation
-  const searchParams = useSearchParams(); // Read initial state from URL reliably
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
 
   const [searchTerm, setSearchTerm] = useState(initialSearchTerm);
   const [page, setPage] = useState(initialPage);
@@ -58,7 +58,7 @@ export default function ClientInquiriesTable({
     currentOrderBy: "asc" | "desc",
     currentSearchTerm: string
   ) => {
-    const params = new URLSearchParams(searchParams.toString()); // Preserve existing params
+    const params = new URLSearchParams(searchParams.toString());
     params.set("page", currentPage.toString());
     params.set("limit", currentLimit.toString());
     params.set("orderBy", currentOrderBy);
@@ -70,57 +70,61 @@ export default function ClientInquiriesTable({
     return params.toString();
   };
 
-  const handleNavigation = (
-    newPage: number,
-    newLimit: number,
-    newOrderBy: "asc" | "desc",
-    newSearchTerm: string
-  ) => {
-    startTransition(() => {
-      const queryString = buildQueryString(
-        newPage,
-        newLimit,
-        newOrderBy,
-        newSearchTerm
-      );
-      router.push(`${pathname}?${queryString}`);
-    });
-  };
+  const handleNavigation = useCallback(
+    (
+      newPage: number,
+      newLimit: number,
+      newOrderBy: "asc" | "desc",
+      newSearchTerm: string
+    ) => {
+      startTransition(() => {
+        const queryString = buildQueryString(
+          newPage,
+          newLimit,
+          newOrderBy,
+          newSearchTerm
+        );
+        router.push(`${pathname}?${queryString}`);
+      });
+    },
+    [searchParams, router, pathname]
+  );
 
-  const handlePageChange = (newPage: number) => {
-    setPage(newPage);
-    handleNavigation(newPage, limit, orderBy, searchTerm);
-  };
+  const handlePageChange = useCallback(
+    (newPage: number) => {
+      setPage(newPage);
+      handleNavigation(newPage, limit, orderBy, searchTerm);
+    },
+    [limit, orderBy, searchTerm, handleNavigation]
+  );
 
-  const handleSearch = () => {
+  const handleSearch = useCallback(() => {
     if (searchTerm.length === 0) {
       toast.error("검색어를 입력해주세요");
       return;
     }
-    // Reset to page 1 on new search
     handleNavigation(1, limit, orderBy, searchTerm);
-  };
+  }, [limit, orderBy, searchTerm, handleNavigation]);
 
-  const handleOrderChange = (value: string | number) => {
-    // Reset to page 1 on order change
-    // We know the value will be 'asc' or 'desc' based on the options provided
-    setOrderBy(value as "asc" | "desc");
-    handleNavigation(1, limit, value as "asc" | "desc", searchTerm);
-  };
+  const handleOrderChange = useCallback(
+    (value: string | number) => {
+      setOrderBy(value as "asc" | "desc");
+      handleNavigation(1, limit, value as "asc" | "desc", searchTerm);
+    },
+    [limit, searchTerm, handleNavigation]
+  );
 
-  const handleLimitChange = (newLimitValue: string | number) => {
-    const numericLimit = parseInt(String(newLimitValue), 10);
-    if (isNaN(numericLimit)) return;
-    // Reset to page 1 on limit change
-    setLimit(numericLimit);
-    handleNavigation(1, numericLimit, orderBy, searchTerm);
-  };
+  const handleLimitChange = useCallback(
+    (newLimitValue: string | number) => {
+      const numericLimit = parseInt(String(newLimitValue), 10);
+      if (isNaN(numericLimit)) return;
+      setLimit(numericLimit);
+      handleNavigation(1, numericLimit, orderBy, searchTerm);
+    },
+    [orderBy, searchTerm, handleNavigation]
+  );
 
   const totalPages = Math.ceil(totalCount / limit);
-
-  const routeToInquiry = (inquiryId: number) => {
-    return `${pathname}/${inquiryId}`;
-  };
 
   return (
     <div>
@@ -181,26 +185,14 @@ export default function ClientInquiriesTable({
             </TableRow>
           </TableHeader>
           <TableBody className="*:not-last:border-b">
-            {initialInquiries.map((inquiry) => (
-              <TableRow key={inquiry.inquiry.id}>
-                <TableCell className="">
-                  {inquiry.user?.username ?? "-"}
-                </TableCell>
-                <TableCell>
-                  <Link
-                    href={routeToInquiry(inquiry.inquiry.id)}
-                    className="hover:underline"
-                    prefetch={false}
-                  >
-                    {inquiry.inquiry.title}
-                  </Link>
-                </TableCell>
-                <TableCell>
-                  {format(inquiry.inquiry.createdAt, "yyyy-MM-dd HH:mm")}
-                </TableCell>
-                <TableCell className="">{inquiry.inquiry.viewCount}</TableCell>
-              </TableRow>
-            ))}
+            {!isPending &&
+              initialInquiries.map((inquiry) => (
+                <InquiryRow
+                  key={inquiry.inquiry.id}
+                  inquiry={inquiry}
+                  pathname={pathname}
+                />
+              ))}
             {initialInquiries.length === 0 && !isPending && (
               <TableRow>
                 <TableCell colSpan={4} className="text-center">
@@ -232,3 +224,35 @@ export default function ClientInquiriesTable({
     </div>
   );
 }
+
+interface InquiryRowProps {
+  inquiry: InquiryWithUser;
+  pathname: string;
+}
+
+const InquiryRow = memo(({ inquiry, pathname }: InquiryRowProps) => {
+  const routeToInquiry = (inquiryId: number) => {
+    return `${pathname}/${inquiryId}`;
+  };
+
+  return (
+    <TableRow key={inquiry.inquiry.id}>
+      <TableCell className="">{inquiry.user?.username ?? "-"}</TableCell>
+      <TableCell>
+        <Link
+          href={routeToInquiry(inquiry.inquiry.id)}
+          className="hover:underline"
+          prefetch={false}
+        >
+          {inquiry.inquiry.title}
+        </Link>
+      </TableCell>
+      <TableCell>
+        {format(inquiry.inquiry.createdAt, "yyyy-MM-dd HH:mm")}
+      </TableCell>
+      <TableCell className="">{inquiry.inquiry.viewCount}</TableCell>
+    </TableRow>
+  );
+});
+
+InquiryRow.displayName = "InquiryRow";
