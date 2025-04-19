@@ -6,6 +6,7 @@ import { auth } from "@/auth";
 import AppSidebar from "@/components/shared/app-sidebar";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { Role } from "@/db/schemas";
+import { getUnreadNotificationsCount } from "@/lib/utils/db/fetchers/get-unread-notifications-count";
 
 const layout = async ({ children }: { children: React.ReactNode }) => {
   const session = await auth();
@@ -14,9 +15,13 @@ const layout = async ({ children }: { children: React.ReactNode }) => {
     return redirect("/login");
   }
 
+  const unreadNotificationsCount = await getUnreadNotificationsCount();
+
   const items = [
     {
-      label: "알림",
+      label: `알림 ${
+        unreadNotificationsCount > 0 ? `(${unreadNotificationsCount})` : ""
+      }`,
       href: "/user/notifications",
       icon: <Bell />,
     },
