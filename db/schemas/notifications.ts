@@ -19,10 +19,16 @@ export const notifications = pgTable("notifications", {
   createdAt: timestamp("created_at").notNull().defaultNow(),
   userId: text("user_id")
     .notNull()
-    .references(() => users.id),
+    .references(() => users.id, {
+      onDelete: "cascade",
+    }),
   isRead: boolean("is_read").notNull().default(false),
-  noticeId: integer("notice_id").references(() => notices.id),
-  inquiryId: integer("inquiry_id").references(() => inquiries.id),
+  noticeId: integer("notice_id").references(() => notices.id, {
+    onDelete: "cascade",
+  }),
+  inquiryId: integer("inquiry_id").references(() => inquiries.id, {
+    onDelete: "cascade",
+  }),
 });
 
 export const notificationRelations = relations(notifications, ({ one }) => ({
