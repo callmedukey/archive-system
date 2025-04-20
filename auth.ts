@@ -45,7 +45,6 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       authorize: async (credentials) => {
         let username;
         let password;
-        console.log(credentials);
         if (credentials.role === Role.USER) {
           const result = UserLoginSchema.safeParse(credentials);
 
@@ -67,7 +66,6 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           username = result.data.username;
           password = result.data.password;
         }
-
 
         const foundUser = await db.query.users.findFirst({
           where: eq(users.username, username as string),

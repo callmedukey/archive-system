@@ -203,6 +203,7 @@ export function SimpleEditor({
             }`}
             disabled={!editor.can().undo()}
             title="Undo"
+            tabIndex={-1}
           >
             <Undo className="h-4 w-4" />
           </button>
@@ -214,6 +215,7 @@ export function SimpleEditor({
             }`}
             disabled={!editor.can().redo()}
             title="Redo"
+            tabIndex={-1}
           >
             <Redo className="h-4 w-4" />
           </button>
@@ -226,6 +228,7 @@ export function SimpleEditor({
             value={editor.getAttributes("textStyle").fontSize || ""}
             className="p-1 border border-gray-300 rounded bg-white text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 h-9 w-20 text-center"
             title="Font Size"
+            tabIndex={-1}
           >
             <option value="">Default</option>
             {fontSizes.map((size) => (
@@ -246,6 +249,7 @@ export function SimpleEditor({
               editor.isActive("bulletList") ? "bg-gray-200 text-blue-600" : ""
             }`}
             title="Bullet List"
+            tabIndex={-1}
           >
             <List className="h-4 w-4" />
           </button>
@@ -256,6 +260,7 @@ export function SimpleEditor({
               editor.isActive("orderedList") ? "bg-gray-200 text-blue-600" : ""
             }`}
             title="Ordered List"
+            tabIndex={-1}
           >
             <ListOrdered className="h-4 w-4" />
           </button>
@@ -271,6 +276,7 @@ export function SimpleEditor({
               editor.isActive("bold") ? "bg-gray-200 text-blue-600" : ""
             }`}
             title="Bold"
+            tabIndex={-1}
           >
             <Bold className="h-4 w-4" />
           </button>
@@ -281,6 +287,7 @@ export function SimpleEditor({
               editor.isActive("italic") ? "bg-gray-200 text-blue-600" : ""
             }`}
             title="Italic"
+            tabIndex={-1}
           >
             <Italic className="h-4 w-4" />
           </button>
@@ -291,6 +298,7 @@ export function SimpleEditor({
               editor.isActive("strike") ? "bg-gray-200 text-blue-600" : ""
             }`}
             title="Strike"
+            tabIndex={-1}
           >
             <StrikeIcon className="h-4 w-4" />
           </button>
@@ -301,6 +309,7 @@ export function SimpleEditor({
               editor.isActive("code") ? "bg-gray-200 text-blue-600" : ""
             }`}
             title="Code"
+            tabIndex={-1}
           >
             <Code className="h-4 w-4" />
           </button>
@@ -311,6 +320,7 @@ export function SimpleEditor({
               editor.isActive("underline") ? "bg-gray-200 text-blue-600" : ""
             }`}
             title="Underline"
+            tabIndex={-1}
           >
             <UnderlineIcon className="h-4 w-4" />
           </button>
@@ -321,6 +331,7 @@ export function SimpleEditor({
             }`}
             type="button"
             title="Set Link"
+            tabIndex={-1}
           >
             <LinkIcon className="h-4 w-4" />
           </button>
@@ -337,6 +348,7 @@ export function SimpleEditor({
               className="absolute opacity-0 w-full h-full cursor-pointer top-0 left-0"
               title="Text Color"
               id="simpleEditorColorPicker"
+              tabIndex={-1}
             />
             <button
               type="button"
@@ -345,6 +357,7 @@ export function SimpleEditor({
                 document.getElementById("simpleEditorColorPicker")?.click()
               }
               title="Text Color"
+              tabIndex={-1}
             >
               <PaletteIcon className="h-4 w-4" />
               <span
@@ -370,6 +383,7 @@ export function SimpleEditor({
                 : ""
             }`}
             title="Align Left"
+            tabIndex={-1}
           >
             <AlignLeft className="h-4 w-4" />
           </button>
@@ -382,6 +396,7 @@ export function SimpleEditor({
                 : ""
             }`}
             title="Align Center"
+            tabIndex={-1}
           >
             <AlignCenter className="h-4 w-4" />
           </button>
@@ -394,6 +409,7 @@ export function SimpleEditor({
                 : ""
             }`}
             title="Align Right"
+            tabIndex={-1}
           >
             <AlignRight className="h-4 w-4" />
           </button>
@@ -406,6 +422,7 @@ export function SimpleEditor({
                 : ""
             }`}
             title="Align Justify"
+            tabIndex={-1}
           >
             <AlignJustify className="h-4 w-4" />
           </button>
@@ -425,6 +442,7 @@ export function SimpleEditor({
             }
             className="p-2 rounded hover:bg-gray-100 transition-colors flex items-center justify-center"
             title="Insert Table"
+            tabIndex={-1}
           >
             <TableIcon className="h-4 w-4" />
           </button>
@@ -438,6 +456,7 @@ export function SimpleEditor({
                 : ""
             }`}
             title="Add Column After"
+            tabIndex={-1}
           >
             <PlusSquare className="h-4 w-4" />
           </button>
@@ -449,6 +468,7 @@ export function SimpleEditor({
               !editor.can().addRowAfter() ? "opacity-50 cursor-not-allowed" : ""
             }`}
             title="Add Row After"
+            tabIndex={-1}
           >
             <PlusSquare className="h-4 w-4" />
           </button>
@@ -462,6 +482,7 @@ export function SimpleEditor({
                 : ""
             }`}
             title="Delete Column"
+            tabIndex={-1}
           >
             <MinusSquare className="h-4 w-4" />
           </button>
@@ -473,6 +494,7 @@ export function SimpleEditor({
               !editor.can().deleteRow() ? "opacity-50 cursor-not-allowed" : ""
             }`}
             title="Delete Row"
+            tabIndex={-1}
           >
             <MinusSquare className="h-4 w-4" />
           </button>
@@ -484,6 +506,7 @@ export function SimpleEditor({
               !editor.can().mergeCells() ? "opacity-50 cursor-not-allowed" : ""
             }`}
             title="Merge Cells"
+            tabIndex={-1}
           >
             <Merge className="h-4 w-4" />
           </button>
@@ -495,6 +518,7 @@ export function SimpleEditor({
               !editor.can().splitCell() ? "opacity-50 cursor-not-allowed" : ""
             }`}
             title="Split Cell"
+            tabIndex={-1}
           >
             <Split className="h-4 w-4" />
           </button>
@@ -506,6 +530,7 @@ export function SimpleEditor({
               !editor.can().deleteTable() ? "opacity-50 cursor-not-allowed" : ""
             }`}
             title="Delete Table"
+            tabIndex={-1}
           >
             <Trash2 className="h-4 w-4" />
           </button>
