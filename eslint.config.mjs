@@ -47,7 +47,11 @@ const eslintConfig = [
         },
       ],
     },
-    ignorePatterns: ["components/ui/**", "components/magicui/**"],
+    ignorePatterns: [
+      "components/ui/**",
+      "components/magicui/**",
+      "components/tiptap-templates/**",
+    ],
     overrides: [
       {
         files: ["*.ts", "*.tsx", "db/seed/*.ts", "db/seed/**/*.ts"],

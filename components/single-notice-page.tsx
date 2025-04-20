@@ -1,33 +1,51 @@
 import DOMPurify from "isomorphic-dompurify";
-import { CircleUserRound, Download } from "lucide-react";
+import { CircleUserRound, Download, Trash } from "lucide-react";
 import Image from "next/image";
 import React from "react";
 
+import { auth } from "@/auth";
 import { CommentWithAuthor, Role, SingleNotice } from "@/db/schemas";
 import formatDate from "@/lib/utils/parse/format-date";
 import renderRoleName from "@/lib/utils/parse/render-role-name";
 
 import Comment from "./shared/comments/comment";
 import DownloadButton from "./shared/download-button";
+import EditButton from "./shared/edit-button";
 import FormCreateComment from "./shared/form-create-comment";
+import { Button } from "./ui/button";
 
 interface SingleNoticePageProps {
   notice: SingleNotice;
-  currentRole: Role;
 }
 
-const SingleNoticePage = ({ notice, currentRole }: SingleNoticePageProps) => {
+const SingleNoticePage = async ({ notice }: SingleNoticePageProps) => {
+  const session = await auth();
+  const currentRole = session?.user.role as Role;
+  const userId = session?.user.id;
+
+  const canEdit = currentRole === Role.SUPERADMIN || userId === notice.authorId;
+
   return (
     <div className="p-4 space-y-6 rounded-lg shadow-md py-6">
-      <div className="border-b pb-4">
-        <h1 className="text-2xl font-bold mb-2">{notice.title}</h1>
-        <div className="flex items-center text-sm text-gray-500 space-x-2">
-          <CircleUserRound className="w-5 h-5" />
-          <span>
-            {renderRoleName(currentRole, notice.author?.role as Role)}
-          </span>
-          <span>{formatDate(notice.createdAt)}</span>
+      <div className="border-b pb-4 flex justify-between items-center">
+        <div>
+          <h1 className="text-2xl font-bold mb-2">{notice.title}</h1>
+          <div className="flex items-center text-sm text-gray-500 space-x-2">
+            <CircleUserRound className="w-5 h-5" />
+            <span>
+              {renderRoleName(currentRole, notice.author?.role as Role)}
+            </span>
+            <span>{formatDate(notice.createdAt)}</span>
+          </div>
         </div>
+        {canEdit && (
+          <div className="flex items-center gap-2">
+            <EditButton />
+            <Button variant="destructive" className="rounded-lg">
+              <Trash className="w-4 h-4" /> 삭제
+            </Button>
+          </div>
+        )}
       </div>
 
       {/* Content */}

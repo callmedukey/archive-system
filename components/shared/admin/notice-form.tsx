@@ -11,7 +11,7 @@ import { deleteFiles } from "@/app/(after-auth)/super-admin/actions/delete-files
 import ButtonWithLoading from "@/components/shared/button-with-loading";
 import CheckboxWithLabel from "@/components/shared/chackbox-with-label";
 import DownloadButton from "@/components/shared/download-button";
-import Tiptap from "@/components/shared/tiptap";
+import { SimpleEditor } from "@/components/tiptap-templates/simple/simple-editor";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
@@ -24,9 +24,9 @@ import {
   createNotice,
   editNotice,
 } from "../../../app/(after-auth)/super-admin/notice/new/action/create-notice";
-
 interface NoticeFormProps {
   onSuccessRedirectUrl: string;
+  initialData?: NewNotice & { id?: number };
   title?: string;
   content?: string;
   isPinned?: boolean;
@@ -36,13 +36,20 @@ interface NoticeFormProps {
   id?: number;
 }
 
-const NoticeForm = ({ onSuccessRedirectUrl, ...props }: NoticeFormProps) => {
+const NoticeForm = ({
+  onSuccessRedirectUrl,
+  initialData,
+  ...props
+}: NoticeFormProps) => {
   const router = useRouter();
-  const [title, setTitle] = useState(props.title || "");
-  const [content, setContent] = useState(props.content || "");
-  const [isPinned, setIsPinned] = useState(props.isPinned || false);
+  const [title, setTitle] = useState(initialData?.title || "");
+  const [content, setContent] = useState(initialData?.content || "");
+  const [isPinned, setIsPinned] = useState(initialData?.isPinned || false);
   const [imageUrls, setImageUrls] = useState<{ url: string; key: string }[]>(
-    props.imageUrls || []
+    initialData?.images?.map((image) => ({
+      url: image.url,
+      key: image.key,
+    })) || []
   );
   const [uploadingImage, setUploadingImage] = useState(false);
   const [uploadingFile, setUploadingFile] = useState(false);
@@ -50,7 +57,13 @@ const NoticeForm = ({ onSuccessRedirectUrl, ...props }: NoticeFormProps) => {
 
   const [fileUrls, setFileUrls] = useState<
     { name: string; url: string; key: string }[]
-  >(props.fileUrls || []);
+  >(
+    initialData?.files?.map((file) => ({
+      name: file.name,
+      url: file.url,
+      key: file.key,
+    })) || []
+  );
 
   const handleDelete = async (urlToDelete: string, type: "image" | "file") => {
     const key = getFileKeyFromUrl(urlToDelete);
@@ -84,18 +97,19 @@ const NoticeForm = ({ onSuccessRedirectUrl, ...props }: NoticeFormProps) => {
           files: fileUrls,
         });
       } else if (props.variant === "edit") {
-        if (!props.id) {
+        if (!initialData?.id) {
           toast.error("공지 아이디가 없습니다.");
           return;
         }
         result = await editNotice({
-          id: props.id,
+          id: initialData.id,
           title,
           content,
           isPinned,
           images: imageUrls,
           files: fileUrls,
         });
+        console.log(result);
       }
       if (result.success) {
         toast.success(result.message);
@@ -122,7 +136,12 @@ const NoticeForm = ({ onSuccessRedirectUrl, ...props }: NoticeFormProps) => {
         onChange={(e) => setTitle(e.target.value)}
         disabled={isPending}
       />
-      <Tiptap content={content} setContent={setContent} disabled={isPending} />
+      <SimpleEditor
+        content={content}
+        setContent={setContent}
+        disabled={isPending}
+      />
+      {/* <Tiptap content={content} setContent={setContent} disabled={isPending} /> */}
       {imageUrls.length > 0 && (
         <ScrollArea className="h-fit mt-6 whitespace-nowrap rounded-md border shadow-md p-4">
           <h2 className="text-lg font-medium">업로드된 이미지</h2>
@@ -277,7 +296,7 @@ const NoticeForm = ({ onSuccessRedirectUrl, ...props }: NoticeFormProps) => {
           isLoading={isPending}
           disabled={isPending || uploadingImage || uploadingFile}
         >
-          공지 등록
+          {props.variant === "create" ? "공지 등록" : "공지 수정"}
         </ButtonWithLoading>
       </div>
     </motion.form>

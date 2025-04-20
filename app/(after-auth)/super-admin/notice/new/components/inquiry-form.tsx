@@ -14,7 +14,7 @@ import {
 } from "@/app/(after-auth)/user/inquiries/action/create-inquiry";
 import ButtonWithLoading from "@/components/shared/button-with-loading";
 import DownloadButton from "@/components/shared/download-button";
-import Tiptap from "@/components/shared/tiptap";
+import { SimpleEditor } from "@/components/tiptap-templates/simple/simple-editor";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
@@ -116,7 +116,11 @@ const InquiryForm = ({ onSuccessRedirectUrl, ...props }: InquiryFormProps) => {
         onChange={(e) => setTitle(e.target.value)}
         disabled={isPending}
       />
-      <Tiptap content={content} setContent={setContent} disabled={isPending} />
+      <SimpleEditor
+        content={content}
+        setContent={setContent}
+        disabled={isPending}
+      />
       {imageUrls.length > 0 && (
         <ScrollArea className="h-fit mt-6 whitespace-nowrap rounded-md border shadow-md p-4">
           <h2 className="text-lg font-medium">업로드된 이미지</h2>

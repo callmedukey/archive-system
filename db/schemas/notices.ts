@@ -108,7 +108,6 @@ export const EditNoticeSchema = CreateNoticeSchema.extend({
   id: z.number({
     required_error: "공지 아이디가 잘못되었습니다.",
   }),
-  viewCount: z.number(),
 });
 
 // Define a more detailed type for the fetched notices

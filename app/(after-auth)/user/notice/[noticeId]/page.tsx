@@ -5,7 +5,7 @@ import React from "react";
 import { auth } from "@/auth";
 import SingleNoticePage from "@/components/single-notice-page";
 import { db } from "@/db";
-import { notices, Role, SingleNotice } from "@/db/schemas";
+import { notices, SingleNotice } from "@/db/schemas";
 
 const page = async ({ params }: { params: Promise<{ noticeId: string }> }) => {
   const { noticeId } = await params;
@@ -61,13 +61,8 @@ const page = async ({ params }: { params: Promise<{ noticeId: string }> }) => {
       viewCount: notice.viewCount + 1,
     })
     .where(eq(notices.id, Number(noticeId)));
-
-  return (
-    <SingleNoticePage
-      notice={notice as SingleNotice}
-      currentRole={session.user.role as Role}
-    />
-  );
+    
+  return <SingleNoticePage notice={notice as SingleNotice} />;
 };
 
 export default page;
