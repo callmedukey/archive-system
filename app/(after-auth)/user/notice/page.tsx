@@ -1,9 +1,10 @@
+import { redirect } from "next/navigation";
 import React, { Suspense } from "react";
 
+import { auth } from "@/auth";
 import NoticesTable from "@/components/shared/notices-table";
 import NoticesWrapper from "@/components/shared/server/notices-wrapper";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Role } from "@/db/schemas";
 
 interface UserNoticePageProps {
   searchParams: Promise<{
@@ -15,6 +16,12 @@ interface UserNoticePageProps {
 
 const page = async ({ searchParams }: UserNoticePageProps) => {
   const { page: pageParam, limit: limitParam, query } = await searchParams;
+
+  const session = await auth();
+
+  if (!session) {
+    return redirect("/login");
+  }
 
   const currentPage = Math.max(1, pageParam ? parseInt(pageParam) : 1);
   const limit = Math.max(
@@ -37,7 +44,7 @@ const page = async ({ searchParams }: UserNoticePageProps) => {
         }
       >
         <NoticesWrapper
-          role={Role.USER}
+          role={session.user.role}
           page={currentPage}
           limit={limit}
           query={searchQuery}
@@ -50,7 +57,7 @@ const page = async ({ searchParams }: UserNoticePageProps) => {
               initialPage={currentPage}
               initialLimit={limit}
               initialQuery={searchQuery}
-              role={Role.USER}
+              role={session.user.role}
             />
           )}
         </NoticesWrapper>

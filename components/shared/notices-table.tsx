@@ -128,12 +128,14 @@ const NoticesTable = ({
             name="limit"
           />
         </aside>
-        <Button asChild>
-          <Link href={`${pathname}/new`}>
-            <Plus />
-            <span className="hidden sm:block">공지 작성</span>
-          </Link>
-        </Button>
+        {role !== Role.USER && (
+          <Button asChild>
+            <Link href={`${pathname}/new`}>
+              <Plus />
+              <span className="hidden sm:block">공지 작성</span>
+            </Link>
+          </Button>
+        )}
       </div>
       <section className="mt-6 relative">
         <Table className="**:text-center">

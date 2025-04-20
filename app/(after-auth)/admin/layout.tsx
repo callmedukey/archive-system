@@ -5,7 +5,6 @@ import {
   UserCog,
   BookText,
   ScrollText,
-  BookOpenText,
 } from "lucide-react";
 import { redirect } from "next/navigation";
 import React, { Suspense } from "react";
@@ -52,11 +51,6 @@ const layout = async ({ children }: { children: React.ReactNode }) => {
       label: "자료 관리",
       href: "/admin/documents",
       icon: <BookText />,
-    },
-    {
-      label: "카테고리 및 양식관리",
-      href: "/admin/categories",
-      icon: <BookOpenText />,
     },
     {
       label: "공지사항 관리",

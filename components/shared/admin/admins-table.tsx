@@ -45,7 +45,6 @@ const AdminsTable = ({
           <TableRow key={user.id}>
             <TableCell>{user.region}</TableCell>
             <TableCell>
-              {" "}
               <SelectWithLabel
                 label=""
                 name="verified"
@@ -54,6 +53,7 @@ const AdminsTable = ({
                   value: status,
                 }))}
                 disabled={isPending}
+                defaultValue={user.verified as string}
                 onChange={(value) => {
                   handleVerificationStatusChange(
                     user.id,
