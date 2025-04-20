@@ -6,6 +6,7 @@ import {
   BookText,
   ScrollText,
   BookOpenText,
+  MapPin,
 } from "lucide-react";
 import { redirect } from "next/navigation";
 import React, { Suspense } from "react";
@@ -47,6 +48,11 @@ const layout = async ({ children }: { children: React.ReactNode }) => {
       label: "사용자 관리",
       href: "/super-admin/users",
       icon: <UserCog />,
+    },
+    {
+      label: "권역 관리",
+      href: "/super-admin/regions",
+      icon: <MapPin />,
     },
     {
       label: "자료 관리",

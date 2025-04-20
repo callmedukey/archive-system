@@ -2,7 +2,7 @@ import { Suspense } from "react";
 
 import AsideUserFilter from "@/components/shared/admin/aside-user-filter";
 import SectionUsersTable from "@/components/shared/admin/section-users-table";
-import AsideRegionsAndIslandsWrapper from "@/components/shared/admin/server/aside-regions-wrapper";
+import RegionsWrapper from "@/components/shared/admin/server/regions-wrapper";
 import UsersDataContextProvider from "@/components/shared/admin/users-data-context-provider";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -22,14 +22,14 @@ const page = async () => {
             </>
           }
         >
-          <AsideRegionsAndIslandsWrapper>
+          <RegionsWrapper>
             {(regions) => (
               <UsersDataContextProvider>
                 <AsideUserFilter regions={regions} />
                 <SectionUsersTable />
               </UsersDataContextProvider>
             )}
-          </AsideRegionsAndIslandsWrapper>
+          </RegionsWrapper>
         </Suspense>
       </section>
     </div>

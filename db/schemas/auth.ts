@@ -104,7 +104,7 @@ export const regions = pgTable("region", {
   id: text("id")
     .primaryKey()
     .$defaultFn(() => crypto.randomUUID()),
-  name: text("name").notNull(),
+  name: text("name").notNull().unique(),
 });
 
 export type Region = typeof regions.$inferSelect;
