@@ -35,7 +35,6 @@ const page = async ({ params }: EditNoticePageProps) => {
   if (currentRole !== Role.SUPERADMIN && notice.authorId !== session?.user.id) {
     return redirect("/login");
   }
-
   return (
     <div>
       <h1>공지사항 수정</h1>

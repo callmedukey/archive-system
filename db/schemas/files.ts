@@ -9,8 +9,12 @@ export const files = pgTable("files", {
   name: text("name").notNull(),
   url: text("url").notNull(),
   key: text("key").notNull(),
-  noticeId: integer("notice_id").references(() => notices.id),
-  inquiryId: integer("inquiry_id").references(() => inquiries.id),
+  noticeId: integer("notice_id").references(() => notices.id, {
+    onDelete: "cascade",
+  }),
+  inquiryId: integer("inquiry_id").references(() => inquiries.id, {
+    onDelete: "cascade",
+  }),
 });
 
 export const filesRelations = relations(files, ({ one }) => ({

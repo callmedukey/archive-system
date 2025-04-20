@@ -1,5 +1,5 @@
 import DOMPurify from "isomorphic-dompurify";
-import { CircleUserRound, Download, Trash } from "lucide-react";
+import { CircleUserRound, Download } from "lucide-react";
 import Image from "next/image";
 import React from "react";
 
@@ -8,11 +8,11 @@ import { CommentWithAuthor, Role, SingleNotice } from "@/db/schemas";
 import formatDate from "@/lib/utils/parse/format-date";
 import renderRoleName from "@/lib/utils/parse/render-role-name";
 
+import DeleteNoticeButton from "./delete-notice-button";
 import Comment from "./shared/comments/comment";
 import DownloadButton from "./shared/download-button";
 import EditButton from "./shared/edit-button";
 import FormCreateComment from "./shared/form-create-comment";
-import { Button } from "./ui/button";
 
 interface SingleNoticePageProps {
   notice: SingleNotice;
@@ -41,9 +41,7 @@ const SingleNoticePage = async ({ notice }: SingleNoticePageProps) => {
         {canEdit && (
           <div className="flex items-center gap-2">
             <EditButton />
-            <Button variant="destructive" className="rounded-lg">
-              <Trash className="w-4 h-4" /> 삭제
-            </Button>
+            <DeleteNoticeButton />
           </div>
         )}
       </div>
