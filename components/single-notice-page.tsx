@@ -32,7 +32,7 @@ const SingleNoticePage = ({ notice, currentRole }: SingleNoticePageProps) => {
 
       {/* Content */}
       <main
-        className="p-4 border rounded bg-gray-50 break-words [&>pre]:whitespace-pre-wrap max-w-screen-xl mx-auto"
+        className="p-4 border rounded bg-gray-50 break-words [&>pre]:whitespace-pre-wrap max-w-[calc(100vw-16rem)] mx-auto overflow-x-auto"
         dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(notice.content) }}
       />
 

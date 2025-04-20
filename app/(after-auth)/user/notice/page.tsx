@@ -42,8 +42,9 @@ const page = async ({ searchParams }: UserNoticePageProps) => {
           limit={limit}
           query={searchQuery}
         >
-          {(fetchedNotices, totalCount) => (
+          {(pinnedNotices, fetchedNotices, totalCount) => (
             <NoticesTable
+              pinnedNotices={pinnedNotices ?? []}
               initialNotices={fetchedNotices ?? []}
               totalCount={totalCount ?? 0}
               initialPage={currentPage}

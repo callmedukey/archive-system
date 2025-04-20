@@ -164,7 +164,7 @@ const NoticeForm = ({ onSuccessRedirectUrl, ...props }: NoticeFormProps) => {
                 key={key}
                 className="border-2 p-2 rounded-lg shrink-0 flex items-center gap-2 overflow-clip"
               >
-                <DownloadButton url={url} filename={name} />
+                <DownloadButton url={url} filename={name} className="w-fit" />
                 <Button
                   type="button"
                   variant="outline"

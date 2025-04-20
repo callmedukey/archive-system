@@ -24,6 +24,7 @@ import StandardPagination from "./standard-pagination";
 import { Button } from "../ui/button";
 
 interface NoticesTableProps {
+  pinnedNotices: FetchedNoticesWithoutContent[];
   initialNotices: FetchedNoticesWithoutContent[];
   role: Role;
   totalCount: number;
@@ -33,6 +34,7 @@ interface NoticesTableProps {
 }
 
 const NoticesTable = ({
+  pinnedNotices,
   initialNotices,
   role,
   totalCount,
@@ -144,16 +146,27 @@ const NoticesTable = ({
             </TableRow>
           </TableHeader>
           <TableBody className="*:not-last:border-b">
-            {initialNotices.map((notice) => (
-              <NoticeRow key={notice.id} notice={notice} role={role} />
+            {pinnedNotices?.map((notice) => (
+              <NoticeRow
+                key={`pinned-${notice.id}`}
+                notice={notice}
+                role={role}
+                isPinned
+              />
             ))}
-            {initialNotices.length === 0 && !isPending && (
-              <TableRow>
-                <TableCell colSpan={4} className="text-center">
-                  공지사항이 없습니다.
-                </TableCell>
-              </TableRow>
-            )}
+            {!isPending &&
+              initialNotices?.map((notice) => (
+                <NoticeRow key={notice.id} notice={notice} role={role} />
+              ))}
+            {initialNotices.length === 0 &&
+              pinnedNotices.length === 0 &&
+              !isPending && (
+                <TableRow>
+                  <TableCell colSpan={4} className="text-center">
+                    공지사항이 없습니다.
+                  </TableCell>
+                </TableRow>
+              )}
             {isPending && (
               <TableRow>
                 <TableCell colSpan={4} className="text-center">
@@ -181,12 +194,13 @@ const NoticesTable = ({
 interface NoticeRowProps {
   notice: FetchedNoticesWithoutContent;
   role: Role;
+  isPinned?: boolean;
 }
 
 // Create the memoized NoticeRow component
-const NoticeRow = memo(({ notice, role }: NoticeRowProps) => {
+const NoticeRow = memo(({ notice, role, isPinned = false }: NoticeRowProps) => {
   return (
-    <TableRow className="*:py-4">
+    <TableRow className={`*:py-4 ${isPinned ? "bg-secondary" : ""}`}>
       <TableCell>
         {renderRoleName(
           role,

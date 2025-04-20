@@ -17,6 +17,7 @@ interface NoticeWrapperProps {
   limit: number;
   query: string;
   children: (
+    pinnedNotices: FetchedNoticesWithoutContent[] | null,
     fetchedNotices: FetchedNoticesWithoutContent[] | null,
     totalCount: number
   ) => React.ReactNode;
@@ -31,7 +32,7 @@ const NoticesWrapper = async ({
 }: NoticeWrapperProps) => {
   const session = await auth();
   if (!session?.user?.id) {
-    return children(null, 0);
+    return children(null, null, 0);
   }
 
   const userId = session.user.id;
@@ -44,17 +45,20 @@ const NoticesWrapper = async ({
       )
     : undefined;
 
-  const baseDataQuery = db.select().from(notices).$dynamic();
-  const baseCountQuery = db
-    .select({ count: count(notices.id) })
-    .from(notices)
-    .$dynamic();
+  // Base conditions for non-pinned notices
+  const baseConditions = [eq(notices.isPinned, false)];
+  if (searchCondition) {
+    baseConditions.push(searchCondition);
+  }
 
-  const conditions = [searchCondition].filter(Boolean);
-  if (role === Role.SUPERADMIN) {
-    // Superadmin sees all notices, conditions only include search
-  } else {
-    // Admin/User logic - find allowed authors
+  // Base conditions for pinned notices
+  const pinnedConditions = [eq(notices.isPinned, true)];
+  // Pinned notices ignore the search query
+
+  let allowedAuthorIds: string[] | null = null;
+
+  if (role !== Role.SUPERADMIN) {
+    // Admin/User logic - find allowed authors for both pinned and non-pinned
     const userIslands = await db.query.usersToIslands.findMany({
       columns: { islandId: true },
       where: eq(usersToIslands.userId, userId),
@@ -76,63 +80,96 @@ const NoticesWrapper = async ({
     });
     const superAdminIds = superAdmins.map((sa) => sa.id);
 
-    const allowedAuthorIds = [
-      ...new Set([...superAdminIds, ...sameIslandUserIds]),
-    ];
+    // Allowed authors for non-pinned: same island + superadmins
+    allowedAuthorIds = [...new Set([...superAdminIds, ...sameIslandUserIds])];
 
-    if (allowedAuthorIds.length > 0) {
-      conditions.push(inArray(notices.authorId, allowedAuthorIds));
-    } else {
+    // Allowed authors for pinned: same island + superadmins (same logic applies here)
+    const allowedPinnedAuthorIds = allowedAuthorIds;
+
+    if (allowedAuthorIds.length === 0) {
       // If user has no islands and is not superadmin, they see no notices
-      return children([], 0);
+      return children([], [], 0);
     }
-  }
 
-  if (conditions.length > 0) {
-    const finalCondition = and(...conditions);
-    baseDataQuery.where(finalCondition);
-    baseCountQuery.where(finalCondition);
+    baseConditions.push(inArray(notices.authorId, allowedAuthorIds));
+    pinnedConditions.push(inArray(notices.authorId, allowedPinnedAuthorIds));
   }
+  // Superadmin sees all notices, so no author conditions added for them
 
-  const [fetchedNotices, countResult] = await Promise.all([
-    db.query.notices.findMany({
+  const finalBaseCondition =
+    baseConditions.length > 0 ? and(...baseConditions) : undefined;
+  const finalPinnedCondition =
+    pinnedConditions.length > 0 ? and(...pinnedConditions) : undefined;
+
+  const noticeColumns = {
+    id: true,
+    title: true,
+    createdAt: true,
+    updatedAt: true,
+    isPinned: true,
+    viewCount: true,
+    authorId: true,
+  };
+
+  // Define the structure for fetching related data according to Drizzle types
+  const noticeRelations = {
+    author: {
       columns: {
         id: true,
-        title: true,
-        createdAt: true,
-        updatedAt: true,
-        isPinned: true,
-        viewCount: true,
-        authorId: true,
+        name: true,
+        role: true,
       },
       with: {
-        author: {
-          columns: {
-            id: true,
-            name: true,
-            role: true,
-          },
+        islands: {
+          // The relation name in usersRelations (many(usersToIslands))
+          // No columns needed from the join table itself
           with: {
-            islands: {
-              columns: {},
-              with: {
-                island: true,
+            island: {
+              // The relation name defined in usersToIslandsRelations
+              // Specify the columns needed from the related island table
+              columns: {
+                id: true,
+                name: true,
+                // Add other island columns if needed
               },
             },
           },
         },
       },
-      where: conditions.length > 0 ? and(...conditions) : undefined,
+    },
+  };
+
+  const [pinnedNotices, fetchedNotices, countResult] = await Promise.all([
+    // Pinned notices query (no limit/offset, ignore search)
+    db.query.notices.findMany({
+      columns: noticeColumns,
+      with: noticeRelations, // Use the correctly structured relations object
+      where: finalPinnedCondition,
+      orderBy: (notices, { desc }) => [desc(notices.createdAt)],
+    }),
+    // Regular (non-pinned) notices query
+    db.query.notices.findMany({
+      columns: noticeColumns,
+      with: noticeRelations, // Use the correctly structured relations object
+      where: finalBaseCondition,
       orderBy: (notices, { desc }) => [desc(notices.createdAt)],
       limit: limit,
       offset: offset,
     }),
-    baseCountQuery,
+    // Count query for non-pinned notices matching filters
+    db
+      .select({ count: count(notices.id) })
+      .from(notices)
+      .where(finalBaseCondition),
   ]);
 
   const totalCount = countResult[0]?.count ?? 0;
 
-  return children(fetchedNotices, totalCount);
+  return children(
+    pinnedNotices as FetchedNoticesWithoutContent[],
+    fetchedNotices as FetchedNoticesWithoutContent[],
+    totalCount
+  );
 };
 
 export default NoticesWrapper;
