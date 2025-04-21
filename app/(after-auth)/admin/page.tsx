@@ -77,7 +77,6 @@ const page = async () => {
             <>
               <div className="max-w-xs grid grid-cols-2 gap-2">
                 <Skeleton className="w-full h-10 rounded-lg" />
-                <Skeleton className="w-full h-10 rounded-lg" />
               </div>
               <Skeleton className="w-full h-[200px] rounded-lg mt-6" />
               <Skeleton className="w-full h-[200px] rounded-lg mt-6" />

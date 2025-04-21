@@ -118,7 +118,7 @@ const DashboardMainClient = ({
             label="섬"
             name="island"
             placeholder={
-              selectedRegion ? "선택된 권역의 섬 선택" : "권역을 선택해주세요."
+              selectedRegion ? "섬을 선택해주세요" : "권역을 선택해주세요"
             }
             disabled={isPending}
             className={cn("rounded-lg", isPending && "animate-pulse")}

@@ -1,39 +1,34 @@
 import React from "react";
 
 import NotificationCard from "@/components/shared/notification-card";
-import { Button } from "@/components/ui/button";
+import ReadAllNotificationsButton from "@/components/shared/read-all-notifications-button";
 import { getNotifications } from "@/lib/utils/db/fetchers/get-notifications";
 
-interface NotificationsPageProps {
-  searchParams: Promise<{
-    page?: string;
-    limit?: string;
-    isRead?: "true" | "false";
-  }>;
-}
-
-const page = async ({ searchParams }: NotificationsPageProps) => {
+const page = async () => {
   const notifications = await getNotifications();
   const hasUnreadNotifications = notifications.some(
     (notification) => !notification.isRead
   );
-  // Removed unused variables: page, limit, isRead
-  // const { page, limit, isRead } = await searchParams;
-  await searchParams; // Await the promise even if not destructuring
+
+  const unreadCount = notifications.filter(
+    (notification) => !notification.isRead
+  ).length;
 
   return (
     <div>
       <div className="flex justify-between items-center mb-6">
         <div>
           <h1 className="text-2xl font-bold">알림</h1>
-          <h2 className="text-lg font-medium text-muted-foreground">
-            새로운 알림 {notifications.length}개
-          </h2>
+          {unreadCount > 0 && (
+            <h2 className="text-lg font-medium text-muted-foreground">
+              안읽은 알림 {unreadCount}개
+            </h2>
+          )}
         </div>
         {hasUnreadNotifications && (
-          <Button className="rounded-lg" disabled={!hasUnreadNotifications}>
-            모두 읽음처리
-          </Button>
+          <ReadAllNotificationsButton
+            hasUnreadNotifications={hasUnreadNotifications}
+          />
         )}
       </div>
       <div className="grid gap-4">

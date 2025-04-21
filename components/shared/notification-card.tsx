@@ -1,4 +1,4 @@
-import { Check, ExternalLink } from "lucide-react";
+import { ExternalLink } from "lucide-react";
 import Link from "next/link";
 
 import { auth } from "@/auth";
@@ -6,6 +6,7 @@ import { Notification } from "@/db/schemas";
 import { cn } from "@/lib/utils";
 import renderNotificationLink from "@/lib/utils/parse/render-notification-link";
 
+import ReadNotificationButton from "./read-notification-button";
 import { Button } from "../ui/button";
 import {
   Card,
@@ -31,7 +32,7 @@ const NotificationCard = async ({ notification }: NotificationCardProps) => {
       key={notification.id}
       className={cn(
         "flex flex-row shadow-md",
-        notification.isRead && "bg-muted/50"
+        notification.isRead && "bg-muted-foreground/20 shadow-none"
       )}
     >
       <div className="flex-1">
@@ -45,10 +46,10 @@ const NotificationCard = async ({ notification }: NotificationCardProps) => {
       </div>
       <div className="flex items-center pr-4">
         <div className="flex flex-col gap-2">
-          <Button variant="outline" size="sm" className="rounded-lg">
-            <Check className="mr-2 h-4 w-4" />
-            읽음 처리
-          </Button>
+          <ReadNotificationButton
+            notificationId={notification.id}
+            isRead={notification.isRead}
+          />
           {(notification.noticeId || notification.inquiryId) && (
             <Button asChild variant="default" size="sm" className="rounded-lg">
               <Link
@@ -59,7 +60,7 @@ const NotificationCard = async ({ notification }: NotificationCardProps) => {
                     notification.inquiryId) as number,
                 })}
               >
-                <ExternalLink className="mr-2 h-4 w-4" />
+                <ExternalLink className="mr-auto h-4 w-4" />
                 내용 보기
               </Link>
             </Button>

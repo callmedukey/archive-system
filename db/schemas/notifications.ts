@@ -7,6 +7,7 @@ import {
   boolean,
   integer,
 } from "drizzle-orm/pg-core";
+import { z } from "zod";
 
 import { users } from "./auth";
 import { inquiries } from "./inquiries";
@@ -47,3 +48,11 @@ export const notificationRelations = relations(notifications, ({ one }) => ({
 }));
 
 export type Notification = typeof notifications.$inferSelect;
+
+export const ReadNotificationSchema = z.object({
+  notificationId: z.coerce.number({
+    required_error: "알림 ID가 필요합니다.",
+  }),
+});
+
+export type ReadNotificationSchemaType = z.infer<typeof ReadNotificationSchema>;
