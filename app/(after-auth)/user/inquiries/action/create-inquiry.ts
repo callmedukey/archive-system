@@ -10,11 +10,13 @@ import {
   files,
   images,
   inquiries,
+  islands,
   NewInquiry,
   notifications,
   Role,
   users,
   usersToIslands,
+  usersToRegions,
 } from "@/db/schemas";
 import { ActionResponse } from "@/types/action";
 
@@ -71,19 +73,28 @@ export const createInquiry = async (
       },
     });
 
-    // Find admins in the same island AND all super admins
+    let regionId: string | undefined;
+    if (userIslandLink) {
+      const islandData = await db.query.islands.findFirst({
+        where: eq(islands.id, userIslandLink.islandId),
+        columns: {
+          regionId: true,
+        },
+      });
+      regionId = islandData?.regionId;
+    }
+
     const usersToNotify = await db.query.users.findMany({
       where: or(
-        userIslandLink
+        regionId
           ? and(
               eq(users.role, Role.ADMIN),
-              // Check if user's ID is in the list of user IDs for the target island
               inArray(
                 users.id,
                 db
-                  .select({ userId: usersToIslands.userId })
-                  .from(usersToIslands)
-                  .where(eq(usersToIslands.islandId, userIslandLink.islandId))
+                  .select({ userId: usersToRegions.userId })
+                  .from(usersToRegions)
+                  .where(eq(usersToRegions.regionId, regionId))
               )
             )
           : undefined,

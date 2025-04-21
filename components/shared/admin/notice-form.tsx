@@ -109,7 +109,6 @@ const NoticeForm = ({
           images: imageUrls,
           files: fileUrls,
         });
-        console.log(result);
       }
       if (result.success) {
         toast.success(result.message);

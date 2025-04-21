@@ -10,6 +10,8 @@ import {
   Role,
   usersToIslands,
   InquiryWithUser,
+  usersToRegions,
+  islands,
 } from "@/db/schemas";
 
 interface InquiriesWrapperProps {
@@ -71,39 +73,30 @@ const InquiriesWrapper = async ({
       .$dynamic();
 
     const conditions = [searchCondition].filter(Boolean);
-    let joinNeeded = false;
-    let adminIslandIds: string[] = [];
-
     if (currentUserRole === Role.ADMIN) {
-      const adminIslandLinks = await db
-        .select({ islandId: usersToIslands.islandId })
-        .from(usersToIslands)
-        .where(eq(usersToIslands.userId, currentUserId));
-      adminIslandIds = adminIslandLinks.map((link) => link.islandId);
+      const adminRegionLinks = await db
+        .select({ regionId: usersToRegions.regionId })
+        .from(usersToRegions)
+        .where(eq(usersToRegions.userId, currentUserId));
+      const adminRegionIds = adminRegionLinks.map((link) => link.regionId);
 
-      if (adminIslandIds.length === 0) {
-        return { query: null, countQuery: null }; // Short-circuit
+      if (adminRegionIds.length === 0) {
+        return { query: null, countQuery: null };
       }
 
-      joinNeeded = true; // Need usersToIslands join
+      baseDataQuery
+        .leftJoin(usersToIslands, eq(users.id, usersToIslands.userId))
+        .leftJoin(islands, eq(usersToIslands.islandId, islands.id));
+      baseCountQuery
+        .leftJoin(usersToIslands, eq(users.id, usersToIslands.userId))
+        .leftJoin(islands, eq(usersToIslands.islandId, islands.id));
+
       conditions.push(
         eq(users.role, Role.USER),
-        inArray(usersToIslands.islandId, adminIslandIds)
+        inArray(islands.regionId, adminRegionIds)
       );
     } else if (currentUserRole === Role.USER) {
       conditions.push(eq(inquiries.userId, currentUserId));
-    }
-
-    // Apply joins if needed
-    if (joinNeeded) {
-      baseDataQuery.leftJoin(
-        usersToIslands,
-        eq(users.id, usersToIslands.userId)
-      );
-      baseCountQuery.leftJoin(
-        usersToIslands,
-        eq(users.id, usersToIslands.userId)
-      );
     }
 
     // Apply conditions if any exist
@@ -131,8 +124,8 @@ const InquiriesWrapper = async ({
     .offset(offset);
 
   const [foundInquiriesResult, countResult] = await Promise.all([
-    dataQuery, // Execute the finalized data query
-    countQueryBuilder, // Execute the count query
+    dataQuery,
+    countQueryBuilder,
   ]);
 
   const totalCount = countResult[0]?.count ?? 0;

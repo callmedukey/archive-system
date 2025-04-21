@@ -6,6 +6,7 @@ import { Role, User } from "@/db/schemas";
 
 interface UsersDataWrapperProps {
   children: React.ReactNode;
+  foundUsers?: (User & { region: string })[] | User[];
 }
 
 const UsersDataContext = createContext<{
@@ -24,9 +25,12 @@ const UsersDataContext = createContext<{
   setIsLoading: () => {},
 });
 
-const UsersDataContextProvider = ({ children }: UsersDataWrapperProps) => {
+const UsersDataContextProvider = ({
+  children,
+  foundUsers,
+}: UsersDataWrapperProps) => {
   const [users, setUsers] = useState<(User & { region: string })[] | User[]>(
-    []
+    foundUsers || []
   );
   const [role, setRole] = useState<Role>(Role.USER);
   const [isLoading, setIsLoading] = useState(false);

@@ -13,11 +13,13 @@ import renderRole from "@/lib/utils/parse/render-role";
 
 import SelectWithLabel from "../select-with-label";
 import { useUsersData } from "./users-data-context-provider";
+
 interface AsideUserFilterProps {
   regions: Region[];
+  userRole: Role;
 }
 
-const AsideUserFilter = ({ regions }: AsideUserFilterProps) => {
+const AsideUserFilter = ({ regions, userRole }: AsideUserFilterProps) => {
   const { setUsers, role, setRole } = useUsersData();
 
   const [selectedRegion, setSelectedRegion] = useState<Region | null>(null);
@@ -47,6 +49,10 @@ const AsideUserFilter = ({ regions }: AsideUserFilterProps) => {
     setUsers([]);
     setSelectedRegion(null);
   };
+
+  if (userRole !== Role.SUPERADMIN) {
+    return null;
+  }
 
   return (
     <aside className="max-w-md grid grid-cols-2 gap-2">

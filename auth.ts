@@ -5,7 +5,7 @@ import Credentials from "next-auth/providers/credentials";
 
 import { db } from "./db";
 import { Role } from "./db/schemas";
-import { users } from "./db/schemas/auth";
+import { users, usersToRegions } from "./db/schemas/auth";
 import { LoginSchema, UserLoginSchema } from "./lib/schemas/auth/login.schema";
 import { verifyPassword } from "./lib/utils/verifyPassword";
 
@@ -17,6 +17,7 @@ declare module "next-auth" {
       name: string;
       username: string;
       role: Role;
+      regionId: string;
     };
   }
 }
@@ -30,8 +31,6 @@ class InvalidPasswordError extends CredentialsSignin {
 class UserNotFoundError extends CredentialsSignin {
   code = "UserNotFound";
 }
-
-// import { hashPassword } from "@/lib/utils/hashPassword";
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
   adapter: DrizzleAdapter(db),
@@ -69,6 +68,9 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
 
         const foundUser = await db.query.users.findFirst({
           where: eq(users.username, username as string),
+          with: {
+            regions: true,
+          },
         });
 
         if (!foundUser) {
@@ -91,6 +93,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           name: foundUser.name,
           username: foundUser.username,
           role: foundUser.role,
+          regionId: foundUser.regions[0]?.regionId,
         };
       },
     }),
@@ -102,15 +105,21 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     async session({ session, token }) {
       session.user.id = token.sub as string;
       session.user.role = token.role as Role;
+      session.user.regionId = token.regionId as string;
       return session;
     },
     async jwt({ token }) {
       const foundUser = await db
-        .select()
+        .select({
+          role: users.role,
+          regionId: usersToRegions.regionId,
+        })
         .from(users)
+        .leftJoin(usersToRegions, eq(users.id, usersToRegions.userId))
         .where(eq(users.id, token.sub as string));
 
       token.role = foundUser[0].role;
+      token.regionId = foundUser[0].regionId;
 
       return token;
     },

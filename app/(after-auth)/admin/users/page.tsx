@@ -2,9 +2,8 @@ import { redirect } from "next/navigation";
 import { Suspense } from "react";
 
 import { auth } from "@/auth";
-import AsideUserFilter from "@/components/shared/admin/aside-user-filter";
 import SectionUsersTable from "@/components/shared/admin/section-users-table";
-import RegionsWrapper from "@/components/shared/admin/server/regions-wrapper";
+import UsersWrapper from "@/components/shared/admin/server/users-wrapper";
 import UsersDataContextProvider from "@/components/shared/admin/users-data-context-provider";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -22,25 +21,17 @@ const page = async () => {
         <Suspense
           fallback={
             <>
-              <div className="max-w-md grid grid-cols-2 gap-2">
-                <Skeleton className="w-full h-10 rounded-lg" />
-                <Skeleton className="w-full h-10 rounded-lg" />
-              </div>
               <Skeleton className="w-full h-120 rounded-lg mt-6" />
             </>
           }
         >
-          <RegionsWrapper>
-            {(regions) => (
-              <UsersDataContextProvider>
-                <AsideUserFilter
-                  regions={regions}
-                  userRole={session.user.role}
-                />
+          <UsersWrapper>
+            {(users) => (
+              <UsersDataContextProvider foundUsers={users}>
                 <SectionUsersTable />
               </UsersDataContextProvider>
             )}
-          </RegionsWrapper>
+          </UsersWrapper>
         </Suspense>
       </section>
     </div>

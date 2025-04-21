@@ -1,11 +1,12 @@
 import React from "react";
 
+import { auth } from "@/auth";
 import { Region, Role } from "@/db/schemas";
 import { getRegions } from "@/lib/utils/db/fetchers/areas";
 
 interface DashboardMainWrapperProps {
   role: Role;
-  children: (regions: Region[]) => React.ReactNode;
+  children: (regions: Region[], regionId?: string) => React.ReactNode;
 }
 
 const DashboardMainWrapper = async ({
@@ -14,11 +15,17 @@ const DashboardMainWrapper = async ({
 }: DashboardMainWrapperProps) => {
   let regions: Region[] = [];
 
-  if (role === Role.SUPERADMIN) {
+  const session = await auth();
+
+  if (!session) {
+    return null;
+  }
+
+  if (role !== Role.USER) {
     regions = await getRegions();
   }
 
-  return children(regions);
+  return children(regions, session.user.regionId);
 };
 
 export default DashboardMainWrapper;

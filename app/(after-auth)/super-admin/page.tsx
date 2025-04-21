@@ -1,12 +1,19 @@
+import { redirect } from "next/navigation";
 import React, { Suspense } from "react";
 
+import { auth } from "@/auth";
+import DashboardInfoTableCard from "@/components/shared/dashboard-info-table-card";
 import DashboardMainClient from "@/components/shared/dashboard-main-client";
+import DashboardMainWrapper from "@/components/shared/dashboard-main-wrapper";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Role } from "@/db/schemas";
 
-import DashboardInfoTableCard from "../../../components/shared/dashboard-info-table-card";
-import DashboardMainWrapper from "../../../components/shared/dashboard-main-wrapper";
 const page = async () => {
+  const session = await auth();
+
+  if (!session) {
+    return redirect("/login");
+  }
+
   return (
     <div className="pb-6">
       <h1>전체 현황판</h1>
@@ -77,9 +84,9 @@ const page = async () => {
             </>
           }
         >
-          <DashboardMainWrapper role={Role.SUPERADMIN}>
+          <DashboardMainWrapper role={session.user.role}>
             {(regions) => (
-              <DashboardMainClient regions={regions} role={Role.SUPERADMIN} />
+              <DashboardMainClient regions={regions} role={session.user.role} />
             )}
           </DashboardMainWrapper>
         </Suspense>

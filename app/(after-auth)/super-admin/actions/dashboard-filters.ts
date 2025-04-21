@@ -16,14 +16,25 @@ import {
 
 export async function getIslandsByRegion(
   _: Island[] | null,
-  regionId: string
+  regionId: string,
+  searchRole?: Role
 ): Promise<Island[]> {
   if (!regionId) {
     return [];
   }
-  const foundIslands = await db.query.islands.findMany({
-    where: eq(islands.regionId, regionId),
-  });
+  const results = await db
+    .selectDistinct({ island: islands })
+    .from(islands)
+    .innerJoin(usersToIslands, eq(islands.id, usersToIslands.islandId))
+    .innerJoin(users, eq(usersToIslands.userId, users.id))
+    .where(
+      and(
+        eq(islands.regionId, regionId),
+        eq(users.role, searchRole || Role.USER)
+      )
+    );
+
+  const foundIslands = results.map((result) => result.island);
   return foundIslands;
 }
 

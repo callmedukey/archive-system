@@ -1,6 +1,11 @@
 "use client";
 
-import React, { startTransition, useActionState, useState } from "react";
+import React, {
+  startTransition,
+  useActionState,
+  useEffect,
+  useState,
+} from "react";
 import { Bar, BarChart, CartesianGrid, XAxis } from "recharts";
 
 import SelectWithLabel from "@/components/shared/select-with-label";
@@ -25,10 +30,20 @@ import { getIslandsByRegion } from "../../app/(after-auth)/super-admin/actions/d
 interface DashboardMainClientProps {
   regions: Region[];
   role: Role;
+  currentRegionId?: string;
 }
 
-const DashboardMainClient = ({ regions, role }: DashboardMainClientProps) => {
-  const [selectedRegion, setSelectedRegion] = useState<Region | null>(null);
+const DashboardMainClient = ({
+  regions,
+  role,
+  currentRegionId,
+}: DashboardMainClientProps) => {
+  console.log(regions, currentRegionId);
+  const [selectedRegion, setSelectedRegion] = useState<Region | null>(
+    currentRegionId
+      ? regions.find((region) => region.id === currentRegionId) || null
+      : null
+  );
   const [selectedIsland, setSelectedIsland] = useState<Island | null>(null);
   const [selectableIslands, action, isPending] = useActionState(
     getIslandsByRegion,
@@ -68,27 +83,37 @@ const DashboardMainClient = ({ regions, role }: DashboardMainClientProps) => {
     },
   };
 
+  useEffect(() => {
+    if (currentRegionId) {
+      startTransition(() => {
+        action(currentRegionId);
+      });
+    }
+  }, [currentRegionId, action]);
+
   return (
     <>
       {role !== Role.USER && (
         <div className="max-w-xs grid grid-cols-2 gap-2">
-          <SelectWithLabel
-            label="권역"
-            name="region"
-            placeholder="권역 선택"
-            className="rounded-lg"
-            options={regions.map((region) => ({
-              label: region.name,
-              value: region.id,
-            }))}
-            value={selectedRegion?.id || ""}
-            onChange={(value) => {
-              const region = regions.find((region) => region.id === value);
-              setSelectedRegion(region || null);
-              handleRegionChange(value as string);
-            }}
-            disableLabel
-          />
+          {role === Role.SUPERADMIN && (
+            <SelectWithLabel
+              label="권역"
+              name="region"
+              placeholder="권역 선택"
+              className="rounded-lg"
+              options={regions.map((region) => ({
+                label: region.name,
+                value: region.id,
+              }))}
+              value={selectedRegion?.id || ""}
+              onChange={(value) => {
+                const region = regions.find((region) => region.id === value);
+                setSelectedRegion(region || null);
+                handleRegionChange(value as string);
+              }}
+              disableLabel
+            />
+          )}
           <SelectWithLabel
             label="섬"
             name="island"
