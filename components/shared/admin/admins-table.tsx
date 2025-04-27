@@ -34,7 +34,6 @@ const AdminsTable = ({
         <TableRow>
           <TableHead className="">권역</TableHead>
           <TableHead>가입상태</TableHead>
-          <TableHead>이름</TableHead>
           <TableHead>연락처</TableHead>
           <TableHead>메일 주소</TableHead>
           <TableHead>가입일자</TableHead>
@@ -63,7 +62,6 @@ const AdminsTable = ({
                 disableLabel
               />
             </TableCell>
-            <TableCell>{user.name}</TableCell>
             <TableCell>{user.phone}</TableCell>
             <TableCell>{user.email}</TableCell>
             <TableCell>

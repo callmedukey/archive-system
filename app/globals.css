@@ -138,3 +138,14 @@
 .ProseMirror table .selectedCell {
   background-color: #cceeff; /* Light blue background for selected cells */
 }
+
+/* Apply pointer cursor to table cells in Tiptap */
+.ProseMirror table td,
+.ProseMirror table th {
+  cursor: pointer;
+}
+
+/* Ensure editor content area allows these cursors */
+.tiptap > .ProseMirror {
+  cursor: auto; /* Allow child cursors to take precedence */
+}

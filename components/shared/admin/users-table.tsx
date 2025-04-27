@@ -14,6 +14,7 @@ import renderVerificationStatus from "@/lib/utils/parse/render-verification-stat
 
 import SelectWithLabel from "../select-with-label";
 import { useUsersData } from "./users-data-context-provider";
+import UsersTableDateSelector from "./users-table-date-selector";
 
 interface UsersTableProps {
   isPending: boolean;
@@ -37,6 +38,7 @@ const UsersTable = ({
           <TableHead>사업 단계</TableHead>
           <TableHead>연락처</TableHead>
           <TableHead>메일 주소</TableHead>
+          <TableHead>계약기간</TableHead>
           <TableHead>회사명</TableHead>
           <TableHead>회사 연락처</TableHead>
           <TableHead>가입일자</TableHead>
@@ -73,6 +75,13 @@ const UsersTable = ({
             <TableCell>{user.level}단계</TableCell>
             <TableCell>{user.phone}</TableCell>
             <TableCell>{user.email}</TableCell>
+            <TableCell>
+              <UsersTableDateSelector
+                userId={user.id}
+                from={user.contractPeriodStart ?? undefined}
+                to={user.contractPeriodEnd ?? undefined}
+              />
+            </TableCell>
             <TableCell>{user.company}</TableCell>
             <TableCell>{user.companyPhone}</TableCell>
             <TableCell>

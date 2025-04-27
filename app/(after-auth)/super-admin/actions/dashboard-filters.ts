@@ -73,6 +73,8 @@ export async function getUsersByRegion(
         company: users.company,
         companyPhone: users.companyPhone,
         createdAt: users.createdAt,
+        contractPeriodStart: users.contractPeriodStart,
+        contractPeriodEnd: users.contractPeriodEnd,
       },
       region: regions,
     })

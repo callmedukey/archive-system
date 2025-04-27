@@ -40,6 +40,8 @@ export const users = pgTable("user", {
   email: text("email").unique(),
   phone: text("phone"),
   company: text("company"),
+  contractPeriodStart: timestamp("contract_period_start", { mode: "date" }),
+  contractPeriodEnd: timestamp("contract_period_end", { mode: "date" }),
   companyPhone: text("company_phone"),
   password: text("password").notNull(),
   verified: verificationStatusEnum("verified").default(

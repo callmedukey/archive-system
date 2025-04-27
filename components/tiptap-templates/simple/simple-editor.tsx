@@ -32,6 +32,7 @@ import {
   Undo,
   Redo,
   Palette as PaletteIcon,
+  PaintBucket,
   Table as TableIcon,
   PlusSquare,
   MinusSquare,
@@ -67,6 +68,27 @@ const ExtendedTextStyle = TextStyle.extend({
           }
           return {
             style: `font-size: ${attributes.fontSize}px`,
+          };
+        },
+      },
+    };
+  },
+});
+
+// Extend TableCell to include backgroundColor attribute
+const CustomTableCell = TableCell.extend({
+  addAttributes() {
+    return {
+      ...this.parent?.(),
+      backgroundColor: {
+        default: null,
+        parseHTML: (element) => element.style.backgroundColor,
+        renderHTML: (attributes) => {
+          if (!attributes.backgroundColor) {
+            return {};
+          }
+          return {
+            style: `background-color: ${attributes.backgroundColor}`,
           };
         },
       },
@@ -135,7 +157,7 @@ export function SimpleEditor({
           class: "border border-gray-300 p-2 bg-gray-100 font-bold",
         },
       }),
-      TableCell.configure({
+      CustomTableCell.configure({
         HTMLAttributes: {
           class: "border border-gray-300 p-2",
         },
@@ -169,6 +191,19 @@ export function SimpleEditor({
     [editor]
   );
 
+  // Handler for cell background color change
+  const handleCellBackgroundColorChange = useCallback(
+    (event: ChangeEvent<HTMLInputElement>) => {
+      if (!editor) return;
+      editor
+        .chain()
+        .focus()
+        .setCellAttribute("backgroundColor", event.target.value)
+        .run();
+    },
+    [editor]
+  );
+
   const setLink = useCallback(() => {
     if (!editor) return;
     const previousUrl = editor.getAttributes("link").href;
@@ -190,6 +225,9 @@ export function SimpleEditor({
   }, [editor]);
 
   if (!editor) return null; // Return null if editor is not yet initialized
+
+  const currentCellBackgroundColor =
+    editor.getAttributes("tableCell").backgroundColor || "#ffffff"; // Default to white if no color set
 
   return (
     <>
@@ -446,6 +484,42 @@ export function SimpleEditor({
           >
             <TableIcon className="h-4 w-4" />
           </button>
+          <div className="relative inline-block">
+            <input
+              type="color"
+              onInput={handleCellBackgroundColorChange}
+              value={currentCellBackgroundColor}
+              className="absolute opacity-0 w-full h-full cursor-pointer top-0 left-0"
+              title="Cell Background Color"
+              id="cellBackgroundColorPicker"
+              tabIndex={-1}
+              disabled={
+                !editor.can().setCellAttribute("backgroundColor", "#ffffff")
+              }
+            />
+            <button
+              type="button"
+              className={`p-2 rounded hover:bg-gray-100 transition-colors justify-center flex items-center gap-1 ${
+                !editor.can().setCellAttribute("backgroundColor", "#ffffff")
+                  ? "opacity-50 cursor-not-allowed"
+                  : ""
+              }`}
+              onClick={() =>
+                document.getElementById("cellBackgroundColorPicker")?.click()
+              }
+              disabled={
+                !editor.can().setCellAttribute("backgroundColor", "#ffffff")
+              }
+              title="Cell Background Color"
+              tabIndex={-1}
+            >
+              <PaintBucket className="h-4 w-4" />
+              <span
+                className="inline-block w-3 h-3 rounded-full border border-gray-400"
+                style={{ backgroundColor: currentCellBackgroundColor }}
+              ></span>
+            </button>
+          </div>
           <button
             type="button"
             onClick={() => editor.chain().focus().addColumnAfter().run()}
@@ -458,7 +532,8 @@ export function SimpleEditor({
             title="Add Column After"
             tabIndex={-1}
           >
-            <PlusSquare className="h-4 w-4" />
+            <PlusSquare className="h-4 w-4" />{" "}
+            <span className="text-xs ml-1">열</span>
           </button>
           <button
             type="button"
@@ -470,7 +545,8 @@ export function SimpleEditor({
             title="Add Row After"
             tabIndex={-1}
           >
-            <PlusSquare className="h-4 w-4" />
+            <PlusSquare className="h-4 w-4" />{" "}
+            <span className="text-xs ml-1">행</span>
           </button>
           <button
             type="button"
