@@ -12,6 +12,9 @@ import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
 import { users } from "./auth";
+import { comments } from "./comments";
+import { files } from "./files";
+import { images } from "./images";
 
 export const documentFormats = pgTable("document_formats", {
   id: uuid("id").primaryKey().defaultRandom(),
@@ -136,8 +139,13 @@ export const documents = pgTable("documents", {
   reportingCompany: text("reporting_company").notNull(),
   level: integer("level").notNull(),
   status: text("status").notNull(),
+
   typeName: text("type_name").notNull(),
   typeContent: text("type_content").notNull(),
+
+  approvedDate: timestamp("approved_date", { mode: "date" }),
+  editRequestDate: timestamp("edit_request_date", { mode: "date" }),
+  editRequestReason: text("edit_request_reason"),
 
   activityPeriodStart: timestamp("activity_period_start", { mode: "date" }),
   activityPeriodEnd: timestamp("activity_period_end", { mode: "date" }),
@@ -162,7 +170,7 @@ export const documents = pgTable("documents", {
     .$onUpdate(() => new Date()),
 });
 
-export const documentsRelations = relations(documents, ({ one }) => ({
+export const documentsRelations = relations(documents, ({ one, many }) => ({
   user: one(users, {
     fields: [documents.userId],
     references: [users.id],
@@ -171,4 +179,7 @@ export const documentsRelations = relations(documents, ({ one }) => ({
     fields: [documents.formatId],
     references: [documentFormats.id],
   }),
+  comments: many(comments),
+  files: many(files),
+  images: many(images),
 }));

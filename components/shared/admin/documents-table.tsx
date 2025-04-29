@@ -207,7 +207,7 @@ const DocumentsTable = ({
             {initialDocuments.length === 0 && !isPending && (
               <TableRow>
                 <TableCell colSpan={6} className="text-center h-24">
-                  표시할 문서가 없습니다.
+                  등록된 문서가 없습니다.
                 </TableCell>
               </TableRow>
             )}

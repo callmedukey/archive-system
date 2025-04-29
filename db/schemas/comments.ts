@@ -11,12 +11,16 @@ import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
 import { User, users } from "./auth";
+import { documents } from "./documents";
 import { inquiries } from "./inquiries";
 import { notices } from "./notices";
 
 export const comments = pgTable("comments", {
   id: serial("id").primaryKey(),
   content: text("content").notNull(),
+  documentId: uuid("document_id").references(() => documents.id, {
+    onDelete: "cascade",
+  }),
   noticeId: integer("notice_id").references(() => notices.id, {
     onDelete: "cascade",
   }),
@@ -36,13 +40,16 @@ export const commentsRelations = relations(comments, ({ one }) => ({
     references: [users.id],
   }),
   notice: one(notices, {
-    // Also define the relation back to the notice
     fields: [comments.noticeId],
     references: [notices.id],
   }),
   inquiry: one(inquiries, {
     fields: [comments.inquiryId],
     references: [inquiries.id],
+  }),
+  document: one(documents, {
+    fields: [comments.documentId],
+    references: [documents.id],
   }),
 }));
 
@@ -66,14 +73,19 @@ export const CreateCommentSchema = createInsertSchema(comments)
         required_error: "문의 아이디가 잘못되었습니다.",
       })
       .optional(),
+    documentId: z
+      .string({
+        required_error: "문서 아이디가 잘못되었습니다.",
+      })
+      .optional(),
   })
   .refine(
     (data) => {
-      return data.noticeId || data.inquiryId;
+      return data.noticeId || data.inquiryId || data.documentId;
     },
     {
-      path: ["noticeId", "inquiryId"],
-      message: "공지 또는 문의 아이디를 입력해주세요.",
+      path: ["noticeId", "inquiryId", "documentId"],
+      message: "공지, 문의 또는 문서 아이디를 입력해주세요.",
     }
   );
 
