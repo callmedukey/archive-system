@@ -18,6 +18,7 @@ import {
 import SearchInputWithButton from "../search-input-with-button";
 import SelectWithLabel from "../select-with-label";
 import StandardPagination from "../standard-pagination";
+import DocumentsAdvancedFilter from "./documents-advanced-filter";
 
 interface DocumentsTableProps {
   initialDocuments: DocumentWithUser[];
@@ -170,7 +171,7 @@ const DocumentsTable = ({
             className="md:col-span-1" // Adjust span as needed
           />
         </div>
-        {/* Add 'Add Document' button here if needed */}
+        <DocumentsAdvancedFilter />
       </aside>
 
       {/* Table Area */}

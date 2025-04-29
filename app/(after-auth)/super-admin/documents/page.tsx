@@ -36,10 +36,13 @@ const page = async ({ searchParams }: DocumentPageProps) => {
       <Suspense
         fallback={
           <div className="mt-6">
-            <div className="grid grid-cols-3 gap-4 items-baseline max-w-md">
-              <Skeleton className="h-10 w-full" />
-              <Skeleton className="h-10 w-full" />
-              <Skeleton className="h-10 w-full" />
+            <div className="flex items-center">
+              <div className="grid grid-cols-3 gap-4 items-baseline max-w-md w-full">
+                <Skeleton className="h-10 w-full" />
+                <Skeleton className="h-10 w-full" />
+                <Skeleton className="h-10 w-full" />
+              </div>
+              <Skeleton className="h-10 w-24 ml-auto mr-0" />
             </div>
             <Skeleton className="w-full h-120 rounded-lg mt-6" />
           </div>
