@@ -1,13 +1,12 @@
 "use client";
 
 import { format } from "date-fns";
-import { MailQuestion } from "lucide-react";
-import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { useState, useTransition, useCallback, memo, useMemo } from "react";
-import { toast } from "sonner";
+import { useState, useTransition, useCallback, useMemo } from "react";
 
-import { Skeleton } from "@/components/ui/skeleton";
+import type { DocumentWithUser } from "@/components/shared/admin/server/document-wrapper";
+
+import { Skeleton } from "../../ui/skeleton";
 import {
   Table,
   TableBody,
@@ -15,41 +14,36 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table";
-import { InquiryWithUser } from "@/db/schemas/inquiries";
+} from "../../ui/table";
+import SearchInputWithButton from "../search-input-with-button";
+import SelectWithLabel from "../select-with-label";
+import StandardPagination from "../standard-pagination";
 
-import SearchInputWithButton from "./search-input-with-button";
-import SelectWithLabel from "./select-with-label";
-import StandardPagination from "./standard-pagination";
-import { Button } from "../ui/button";
-
-interface ClientInquiriesTableProps {
-  initialInquiries: InquiryWithUser[];
+interface DocumentsTableProps {
+  initialDocuments: DocumentWithUser[];
   totalCount: number;
   initialPage?: number;
   initialLimit?: number;
   initialOrderBy?: "asc" | "desc";
   initialSearchTerm?: string;
-  withAddButton?: boolean;
 }
 
-export default function ClientInquiriesTable({
-  initialInquiries,
+const DocumentsTable = ({
+  initialDocuments,
   totalCount,
   initialPage = 1,
-  initialLimit = 10,
-  initialOrderBy = "desc",
+  initialLimit = 10, // Default should match the server page
+  initialOrderBy = "desc", // Default should match the server page
   initialSearchTerm = "",
-  withAddButton = false,
-}: ClientInquiriesTableProps) {
+}: DocumentsTableProps) => {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
 
   const [searchTerm, setSearchTerm] = useState(initialSearchTerm);
   const [page, setPage] = useState(initialPage);
-  const [limit, setLimit] = useState(initialLimit);
-  const [orderBy, setOrderBy] = useState<"asc" | "desc">(initialOrderBy);
+  const [limit, setLimit] = useState(initialLimit); // Manage limit if needed
+  const [orderBy, setOrderBy] = useState<"asc" | "desc">(initialOrderBy); // Manage order if needed
   const [isPending, startTransition] = useTransition();
 
   const buildQueryString = useMemo(
@@ -88,7 +82,8 @@ export default function ClientInquiriesTable({
           newOrderBy,
           newSearchTerm
         );
-        router.push(`${pathname}?${queryString}`);
+        // Using replace to avoid polluting history for filters/search
+        router.replace(`${pathname}?${queryString}`);
       });
     },
     [buildQueryString, router, pathname]
@@ -103,17 +98,17 @@ export default function ClientInquiriesTable({
   );
 
   const handleSearch = useCallback(() => {
-    if (searchTerm.length === 0) {
-      toast.error("검색어를 입력해주세요");
-      return;
-    }
+    setPage(1); // Reset to page 1 on new search
     handleNavigation(1, limit, orderBy, searchTerm);
   }, [limit, orderBy, searchTerm, handleNavigation]);
 
+  // Add handleLimitChange and handleOrderChange if implementing those controls
   const handleOrderChange = useCallback(
     (value: string | number) => {
-      setOrderBy(value as "asc" | "desc");
-      handleNavigation(1, limit, value as "asc" | "desc", searchTerm);
+      const newOrderBy = value as "asc" | "desc";
+      setOrderBy(newOrderBy);
+      setPage(1); // Reset to page 1
+      handleNavigation(1, limit, newOrderBy, searchTerm);
     },
     [limit, searchTerm, handleNavigation]
   );
@@ -123,6 +118,7 @@ export default function ClientInquiriesTable({
       const numericLimit = parseInt(String(newLimitValue), 10);
       if (isNaN(numericLimit)) return;
       setLimit(numericLimit);
+      setPage(1); // Reset to page 1
       handleNavigation(1, numericLimit, orderBy, searchTerm);
     },
     [orderBy, searchTerm, handleNavigation]
@@ -132,15 +128,19 @@ export default function ClientInquiriesTable({
 
   return (
     <div>
-      <div className="flex justify-between items-end mt-6 gap-2">
-        <aside className="grid grid-cols-3 gap-2 lg:gap-4 items-baseline md:max-w-md max-w-xs">
+      {/* Control Area: Search, Filters, etc. */}
+      <aside className="flex justify-between items-end mt-6 gap-2">
+        {/* Adjust max-width and grid layout as needed */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-2 lg:gap-4 items-baseline md:max-w-md max-w-xs">
           <SearchInputWithButton
             value={searchTerm}
-            placeholder="검색어를 입력해주세요"
+            placeholder="문서 검색..."
             onChange={(e) => setSearchTerm(e.target.value)}
             disabled={isPending}
             onSearch={handleSearch}
+            className="md:col-span-3" // Example: make search span full width on mobile
           />
+          {/* Add SelectWithLabel for OrderBy and Limit here if desired */}
           <SelectWithLabel
             label=""
             disabled={isPending}
@@ -152,6 +152,7 @@ export default function ClientInquiriesTable({
               { label: "오래된순", value: "asc" },
             ]}
             name="orderBy"
+            className="md:col-span-1" // Adjust span as needed
           />
           <SelectWithLabel
             label=""
@@ -166,48 +167,54 @@ export default function ClientInquiriesTable({
               { label: "100개씩", value: "100" },
             ]}
             name="limit"
+            className="md:col-span-1" // Adjust span as needed
           />
-        </aside>
-        {withAddButton && (
-          <Button asChild>
-            <Link href="/user/inquiries/new">
-              <MailQuestion />
-              <span className="hidden sm:block">문의하기</span>
-            </Link>
-          </Button>
-        )}
-      </div>
+        </div>
+        {/* Add 'Add Document' button here if needed */}
+      </aside>
 
+      {/* Table Area */}
       <section className="mt-6 relative">
         <Table className="**:text-center">
           <TableHeader className="bg-primary-foreground">
             <TableRow>
-              <TableHead className="w-[10rem]">작성자</TableHead>
-              <TableHead>제목</TableHead>
-              <TableHead className="w-[10rem]">작성일</TableHead>
-              <TableHead className="w-[10rem]">조회수</TableHead>
+              {/* Define your table headers based on DocumentWithUser */}
+              <TableHead>문서명</TableHead>
+              <TableHead>섬</TableHead>
+              <TableHead>지역</TableHead>
+              <TableHead>보고자</TableHead>
+              <TableHead>작성일</TableHead>
+              <TableHead>작성자</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody className="*:not-last:border-b">
             {!isPending &&
-              initialInquiries.map((inquiry) => (
-                <InquiryRow
-                  key={inquiry.inquiry.id}
-                  inquiry={inquiry}
-                  pathname={pathname}
-                />
+              initialDocuments.map((doc) => (
+                <TableRow key={doc.id}>
+                  {/* Populate cells, add Link for details if needed */}
+                  <TableCell className="font-medium">{doc.name}</TableCell>
+                  <TableCell>{doc.islandName ?? "-"}</TableCell>
+                  <TableCell>{doc.regionName ?? "-"}</TableCell>
+                  <TableCell>{doc.reporter ?? "-"}</TableCell>
+                  <TableCell>
+                    {doc.createdAt
+                      ? format(new Date(doc.createdAt), "yyyy-MM-dd")
+                      : "-"}
+                  </TableCell>
+                  <TableCell>{doc.user?.username ?? "-"}</TableCell>
+                </TableRow>
               ))}
-            {initialInquiries.length === 0 && !isPending && (
+            {initialDocuments.length === 0 && !isPending && (
               <TableRow>
-                <TableCell colSpan={4} className="text-center">
-                  문의사항이 없습니다.
+                <TableCell colSpan={6} className="text-center h-24">
+                  표시할 문서가 없습니다.
                 </TableCell>
               </TableRow>
             )}
-
+            {/* Skeleton Loading State */}
             {isPending && (
               <TableRow>
-                <TableCell colSpan={4} className="text-center">
+                <TableCell colSpan={6} className="text-center">
                   <Skeleton className="w-full h-120 rounded-lg" />
                 </TableCell>
               </TableRow>
@@ -216,6 +223,7 @@ export default function ClientInquiriesTable({
         </Table>
       </section>
 
+      {/* Pagination Area */}
       <aside className="mt-6 flex justify-center">
         {totalPages > 1 && (
           <StandardPagination
@@ -227,36 +235,6 @@ export default function ClientInquiriesTable({
       </aside>
     </div>
   );
-}
+};
 
-interface InquiryRowProps {
-  inquiry: InquiryWithUser;
-  pathname: string;
-}
-
-const InquiryRow = memo(({ inquiry, pathname }: InquiryRowProps) => {
-  const routeToInquiry = (inquiryId: number) => {
-    return `${pathname}/${inquiryId}`;
-  };
-
-  return (
-    <TableRow key={inquiry.inquiry.id}>
-      <TableCell className="">{inquiry.user?.username ?? "-"}</TableCell>
-      <TableCell>
-        <Link
-          href={routeToInquiry(inquiry.inquiry.id)}
-          className="hover:underline"
-          prefetch={false}
-        >
-          {inquiry.inquiry.title}
-        </Link>
-      </TableCell>
-      <TableCell>
-        {format(inquiry.inquiry.createdAt, "yyyy-MM-dd HH:mm")}
-      </TableCell>
-      <TableCell className="">{inquiry.inquiry.viewCount}</TableCell>
-    </TableRow>
-  );
-});
-
-InquiryRow.displayName = "InquiryRow";
+export default DocumentsTable;

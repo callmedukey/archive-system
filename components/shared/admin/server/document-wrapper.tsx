@@ -11,15 +11,15 @@ export type DocumentWithUser = typeof documents.$inferSelect & {
 };
 
 interface DocumentWrapperProps {
-  searchTerm: string;
-  page: number;
-  limit: number;
-  orderBy: "asc" | "desc";
+  searchTerm?: string;
+  page?: number;
+  limit?: number;
+  orderBy?: "asc" | "desc";
   children: (data: DocumentWithUser[], totalCount: number) => React.ReactNode;
 }
 const DocumentWrapper = async ({
   searchTerm,
-  page,
+  page = 1,
   limit = 10,
   orderBy,
   children,

@@ -1,7 +1,7 @@
 import { Suspense } from "react";
 
-import ClientInquiriesTable from "@/components/shared/client-inquiries-table";
 import InquiriesWrapper from "@/components/shared/admin/server/inquiries-wapper";
+import ClientInquiriesTable from "@/components/shared/client-inquiries-table";
 import { Skeleton } from "@/components/ui/skeleton";
 
 interface InquiriesPageProps {
