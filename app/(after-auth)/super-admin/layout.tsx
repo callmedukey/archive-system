@@ -60,8 +60,8 @@ const layout = async ({ children }: { children: React.ReactNode }) => {
       icon: <BookText />,
     },
     {
-      label: "카테고리 및 양식관리",
-      href: "/super-admin/categories",
+      label: "양식 관리",
+      href: "/super-admin/manage-documents",
       icon: <BookOpenText />,
     },
     {

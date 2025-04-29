@@ -43,6 +43,7 @@ import {
   ListOrdered,
   Link as LinkIcon,
 } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 const fontSizes = ["12", "14", "16", "18", "20", "24", "30"];
 
@@ -100,10 +101,12 @@ export function SimpleEditor({
   content,
   setContent,
   disabled,
+  applyA4 = false,
 }: {
   content: string;
   setContent: (content: string) => void;
   disabled?: boolean;
+  applyA4?: boolean;
 }) {
   const editor = useEditor({
     immediatelyRender: false,
@@ -112,7 +115,10 @@ export function SimpleEditor({
         autocomplete: "off",
         autocorrect: "off",
         autocapitalize: "off",
-        class: "m-5 focus:outline-none min-h-[300px]",
+        class: cn(
+          "focus:outline-none min-h-[300px] overflow-x-auto max-w-full",
+          applyA4 && "max-w-[793px] mx-auto"
+        ),
       },
     },
     onUpdate: ({ editor }) => {
@@ -123,7 +129,7 @@ export function SimpleEditor({
       StarterKit.configure({
         bulletList: {
           HTMLAttributes: {
-            class: "list-disc ml-6 my-2",
+            class: "list-['-'] ml-6 my-2",
           },
         },
         orderedList: {
@@ -148,7 +154,7 @@ export function SimpleEditor({
       Table.configure({
         resizable: true,
         HTMLAttributes: {
-          class: "border-collapse border border-gray-400 my-4",
+          class: "border-collapse border border-gray-400 my-4 max-w-full",
         },
       }),
       TableRow,
@@ -159,7 +165,7 @@ export function SimpleEditor({
       }),
       CustomTableCell.configure({
         HTMLAttributes: {
-          class: "border border-gray-300 p-2",
+          class: "border border-gray-300 p-0.5",
         },
       }),
     ],
@@ -258,9 +264,8 @@ export function SimpleEditor({
             <Redo className="h-4 w-4" />
           </button>
         </ToolbarGroup>
-        <ToolbarSeparator />
-
-        <ToolbarGroup>
+        {/* <ToolbarSeparator /> */}
+        {/* <ToolbarGroup>
           <select
             onChange={handleFontSizeChange}
             value={editor.getAttributes("textStyle").fontSize || ""}
@@ -275,7 +280,7 @@ export function SimpleEditor({
               </option>
             ))}
           </select>
-        </ToolbarGroup>
+        </ToolbarGroup> */}
 
         <ToolbarSeparator />
 
@@ -561,6 +566,7 @@ export function SimpleEditor({
             tabIndex={-1}
           >
             <MinusSquare className="h-4 w-4" />
+            <span className="text-xs ml-1">열</span>
           </button>
           <button
             type="button"
@@ -573,6 +579,7 @@ export function SimpleEditor({
             tabIndex={-1}
           >
             <MinusSquare className="h-4 w-4" />
+            <span className="text-xs ml-1">행</span>
           </button>
           <button
             type="button"
@@ -613,7 +620,12 @@ export function SimpleEditor({
         </ToolbarGroup>
       </div>
 
-      <div className="p-4 border rounded-lg mt-6 shadow-md">
+      <div
+        className={cn(
+          "p-4 border rounded-lg mt-6 shadow-md max-w-full",
+          applyA4 && "max-w-[820px] mx-auto"
+        )}
+      >
         <EditorContent editor={editor} disabled={disabled} />
       </div>
     </>

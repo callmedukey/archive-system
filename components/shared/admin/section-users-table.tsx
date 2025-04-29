@@ -2,7 +2,7 @@
 import React, { useTransition } from "react";
 import { toast } from "sonner";
 
-import { updateVerifiedStatus } from "@/app/(after-auth)/super-admin/actions/update";
+import { updateVerifiedStatus } from "@/app/(after-auth)/super-admin/actions/auth-update";
 import { Role, VerificationStatus } from "@/db/schemas";
 
 import AdminsTable from "./admins-table";

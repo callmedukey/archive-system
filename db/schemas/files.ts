@@ -9,6 +9,7 @@ export const files = pgTable("files", {
   name: text("name").notNull(),
   url: text("url").notNull(),
   key: text("key").notNull(),
+
   noticeId: integer("notice_id").references(() => notices.id, {
     onDelete: "cascade",
   }),

@@ -7,7 +7,7 @@ import { Button } from "../ui/button";
 
 interface ButtonWithLoadingProps extends React.ComponentProps<typeof Button> {
   isLoading: boolean;
-  children: React.ReactNode;
+  children?: React.ReactNode;
   icon?: React.ReactNode;
 }
 

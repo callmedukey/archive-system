@@ -6,6 +6,7 @@ import {
   timestamp,
   boolean,
   integer,
+  uuid,
 } from "drizzle-orm/pg-core";
 import { z } from "zod";
 
@@ -18,7 +19,7 @@ export const notifications = pgTable("notifications", {
   title: text("title").notNull(),
   content: text("content").notNull(),
   createdAt: timestamp("created_at").notNull().defaultNow(),
-  userId: text("user_id")
+  userId: uuid("user_id")
     .notNull()
     .references(() => users.id, {
       onDelete: "cascade",

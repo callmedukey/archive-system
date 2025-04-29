@@ -1,5 +1,12 @@
 import { relations } from "drizzle-orm";
-import { integer, timestamp, text, pgTable, serial } from "drizzle-orm/pg-core";
+import {
+  integer,
+  timestamp,
+  text,
+  pgTable,
+  serial,
+  uuid,
+} from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -16,7 +23,7 @@ export const comments = pgTable("comments", {
   inquiryId: integer("inquiry_id").references(() => inquiries.id, {
     onDelete: "cascade",
   }),
-  authorId: text("author_id").references(() => users.id, {
+  authorId: uuid("author_id").references(() => users.id, {
     onDelete: "cascade",
   }),
   createdAt: timestamp("created_at").notNull().defaultNow(),

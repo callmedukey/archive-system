@@ -6,6 +6,7 @@ import {
   timestamp,
   integer,
   boolean,
+  uuid,
 } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
@@ -22,7 +23,9 @@ export const notices = pgTable("notices", {
   content: text("content").notNull(),
   isPinned: boolean("is_pinned").notNull().default(false),
   viewCount: integer("view_count").notNull().default(0),
-  authorId: text("author_id").references(() => users.id),
+  authorId: uuid("author_id").references(() => users.id, {
+    onDelete: "cascade",
+  }),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at")
     .notNull()

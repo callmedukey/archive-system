@@ -6,11 +6,13 @@ import {
   primaryKey,
   integer,
   pgEnum,
+  uuid,
 } from "drizzle-orm/pg-core";
 import type { AdapterAccountType } from "next-auth/adapters";
 
 import { enumToPgEnum } from "@/lib/utils/db/enum-to-pg-enum";
 
+import { documents } from "./documents";
 import { notices } from "./notices";
 import { notifications } from "./notifications";
 
@@ -32,9 +34,7 @@ export const verificationStatusEnum = pgEnum(
 );
 
 export const users = pgTable("user", {
-  id: text("id")
-    .primaryKey()
-    .$defaultFn(() => crypto.randomUUID()),
+  id: uuid("id").primaryKey().defaultRandom(),
   name: text("name"),
   username: text("username").unique().notNull(),
   email: text("email").unique(),
@@ -60,6 +60,7 @@ export const usersRelations = relations(users, ({ many }) => ({
   regions: many(usersToRegions),
   notices: many(notices),
   notifications: many(notifications),
+  documents: many(documents),
 }));
 
 export const islands = pgTable("island", {
@@ -83,7 +84,7 @@ export const islandsRelations = relations(islands, ({ many, one }) => ({
 }));
 
 export const usersToIslands = pgTable("usersToIslands", {
-  userId: text("userId")
+  userId: uuid("userId")
     .notNull()
     .references(() => users.id, { onDelete: "cascade" }),
   islandId: text("islandId")
@@ -117,7 +118,7 @@ export const regionsRelations = relations(regions, ({ many }) => ({
 }));
 
 export const usersToRegions = pgTable("usersToRegions", {
-  userId: text("userId")
+  userId: uuid("userId")
     .notNull()
     .references(() => users.id, { onDelete: "cascade" }),
   regionId: text("regionId")
@@ -139,7 +140,7 @@ export const usersToRegionsRelations = relations(usersToRegions, ({ one }) => ({
 export const accounts = pgTable(
   "account",
   {
-    userId: text("userId")
+    userId: uuid("userId")
       .notNull()
       .references(() => users.id, { onDelete: "cascade" }),
     type: text("type").$type<AdapterAccountType>().notNull(),
@@ -164,7 +165,7 @@ export const accounts = pgTable(
 
 export const sessions = pgTable("session", {
   sessionToken: text("sessionToken").primaryKey(),
-  userId: text("userId")
+  userId: uuid("userId")
     .notNull()
     .references(() => users.id, { onDelete: "cascade" }),
   expires: timestamp("expires", { mode: "date" }).notNull(),

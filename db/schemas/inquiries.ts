@@ -1,5 +1,12 @@
 import { relations } from "drizzle-orm";
-import { pgTable, serial, timestamp, text, integer } from "drizzle-orm/pg-core";
+import {
+  pgTable,
+  serial,
+  timestamp,
+  text,
+  integer,
+  uuid,
+} from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -15,7 +22,7 @@ export const inquiries = pgTable("inquiries", {
   id: serial("id").primaryKey(),
   title: text("title").notNull(),
   content: text("content").notNull(),
-  userId: text("user_id").references(() => users.id),
+  userId: uuid("user_id").references(() => users.id),
   viewCount: integer("view_count").default(0),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });

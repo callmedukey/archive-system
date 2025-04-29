@@ -38,7 +38,6 @@ const DashboardMainClient = ({
   role,
   currentRegionId,
 }: DashboardMainClientProps) => {
-  console.log(regions, currentRegionId);
   const [selectedRegion, setSelectedRegion] = useState<Region | null>(
     currentRegionId
       ? regions.find((region) => region.id === currentRegionId) || null
