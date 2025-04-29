@@ -43,7 +43,7 @@ const page = async () => {
           </Button>
           <Button className="rounded-lg" asChild>
             <Link href="/super-admin/manage-documents/activities">
-              활동 설정
+              활동 관리
             </Link>
           </Button>
         </div>

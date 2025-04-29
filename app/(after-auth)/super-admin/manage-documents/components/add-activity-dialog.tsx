@@ -1,6 +1,5 @@
 "use client";
 
-import { Save, Trash2 } from "lucide-react";
 import React, {
   useActionState,
   useEffect,
@@ -11,6 +10,7 @@ import { useFormStatus } from "react-dom";
 import { toast } from "sonner";
 
 import InputWithLabelAndError from "@/components/shared/input-with-label-and-error";
+import SelectWithLabel from "@/components/shared/select-with-label";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -20,14 +20,14 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ActionResponse } from "@/types/action";
 
+import ActivityContentListItem from "./activity-content-list-item";
+import ActivityTypeListItem from "./activity-type-list-item";
 import {
+  createActivityContent,
   createActivityType,
-  deleteActivityType,
-  updateActivityType,
 } from "../actions/crud-activity";
 
 interface ActivityDialogProps {
@@ -66,11 +66,20 @@ const AddActivityDialog = ({
 }: ActivityDialogProps) => {
   const [tab, setTab] = useState<Tab>("type");
   const [t_isPending, startTransition] = useTransition();
-
   const [state, createActivityTypeAction, isPending] = useActionState<
     ActionResponse<{ name: string; textCode: string }>,
     FormData
   >(createActivityType, initialState);
+
+  const [contentState, createActivityContentAction, contentIsPending] =
+    useActionState<
+      ActionResponse<{
+        name?: string;
+        numericalCode?: number;
+        activityTypeId?: string;
+      }>,
+      FormData
+    >(createActivityContent, initialState);
 
   useEffect(() => {
     if (state.success) {
@@ -89,7 +98,7 @@ const AddActivityDialog = ({
       </DialogTrigger>
       <DialogContent className="max-h-[min(50rem,90vh)] overflow-y-auto h-full flex flex-col">
         <DialogHeader className="h-fit">
-          <DialogTitle>활동 추가</DialogTitle>
+          <DialogTitle>활동 설정</DialogTitle>
           <DialogDescription className="sr-only">
             활동을 추가하려면 아래 탭을 선택하세요.
           </DialogDescription>
@@ -109,65 +118,18 @@ const AddActivityDialog = ({
           <TabsContent value="type">
             <ul>
               {activityTypes.map((activityType, index) => (
-                <li
-                  key={activityType.id}
-                  className="flex items-center justify-between gap-2 py-1"
-                >
-                  <span className="text-sm font-medium w-6 text-center">
-                    {index + 1}.
-                  </span>
-                  <Input
-                    defaultValue={activityType.name}
-                    className="flex-1 min-w-0"
-                  />
-                  <Input
-                    defaultValue={activityType.textCode}
-                    className="w-20"
-                  />
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    disabled={isPending || t_isPending}
-                    onClick={() => {
-                      startTransition(async () => {
-                        const result = await updateActivityType({
-                          id: activityType.id,
-                          name: activityType.name,
-                          textCode: activityType.textCode,
-                        });
-                        if (result.success) {
-                          toast.success(result.message);
-                        } else {
-                          toast.error(result.message);
-                        }
-                      });
-                    }}
-                  >
-                    <Save className="h-4 w-4" />
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    disabled={isPending || t_isPending}
-                    onClick={() => {
-                      startTransition(async () => {
-                        const result = await deleteActivityType({
-                          id: activityType.id,
-                        });
-                        if (result.success) {
-                          toast.success(result.message);
-                        } else {
-                          toast.error(result.message);
-                        }
-                      });
-                    }}
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                </li>
+                <ActivityTypeListItem
+                  key={
+                    activityType.id + activityType.name + activityType.textCode
+                  }
+                  activityType={activityType}
+                  index={index}
+                  isPending={isPending || contentIsPending || t_isPending}
+                  startTransition={startTransition}
+                />
               ))}
               {!activityTypes.length && (
-                <p className="text-center text-sm text-muted-foreground">
+                <p className="text-center text-sm text-muted-foreground py-6">
                   활동 분류가 없습니다.
                 </p>
               )}
@@ -191,27 +153,67 @@ const AddActivityDialog = ({
                 defaultValue={String(state.inputs?.textCode ?? "")}
                 error={state.errors?.textCode?.[0]}
               />
-              <SubmitButton disabled={isPending || t_isPending} />
+              <SubmitButton
+                disabled={isPending || contentIsPending || t_isPending}
+              />
             </form>
           </TabsContent>
           <TabsContent value="content">
-            {activities.map((activity) => (
-              <li key={activity.id}>
-                <Input defaultValue={activity.name} className="flex-1" />
-                <Button variant="ghost" size="icon">
-                  <Trash2 className="h-4 w-4" />
-                </Button>
-              </li>
-            ))}
+            <ul>
+              {activities.map((activity, index) => (
+                <ActivityContentListItem
+                  key={`${activity.id}-${activity.name}-${activity.numericalCode}-${activity.activityTypeId}`}
+                  activity={activity}
+                  activityTypes={activityTypes}
+                  index={index}
+                  isPending={isPending || contentIsPending || t_isPending}
+                  startTransition={startTransition}
+                />
+              ))}
+            </ul>
             {!activities.length && (
-              <p className="text-center text-sm text-muted-foreground">
+              <p className="text-center text-sm text-muted-foreground py-6">
                 활동 내용이 없습니다.
               </p>
             )}
           </TabsContent>
           <TabsContent value="add-content">
-            <Input placeholder="활동 내용" />
-            <Button>추가</Button>
+            <form
+              className="space-y-2 py-5"
+              action={createActivityContentAction}
+            >
+              <SelectWithLabel
+                label="활동 분류"
+                name="activityTypeId"
+                options={activityTypes.map((activityType) => ({
+                  label: activityType.name,
+                  value: activityType.id,
+                }))}
+              />
+              {contentState.errors?.activityTypeId?.[0] && (
+                <p className="text-red-500 text-sm">
+                  {contentState.errors.activityTypeId[0]}
+                </p>
+              )}
+              <InputWithLabelAndError
+                type="text"
+                label="활동 내용 이름"
+                name="name"
+                placeholder=""
+                error={contentState.errors?.name?.[0]}
+              />
+              <InputWithLabelAndError
+                type="number"
+                label="활동 내용 번호"
+                name="numericalCode"
+                step={1}
+                placeholder=""
+                error={contentState.errors?.numericalCode?.[0]}
+              />
+              <SubmitButton
+                disabled={isPending || contentIsPending || t_isPending}
+              />
+            </form>
           </TabsContent>
         </Tabs>
       </DialogContent>

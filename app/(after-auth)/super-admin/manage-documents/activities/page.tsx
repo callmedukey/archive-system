@@ -53,8 +53,8 @@ const page = async () => {
           activityTypes={activityTypes}
         />
       </aside>
-      <Table className="mt-6 *:text-center">
-        <TableHeader>
+      <Table className="mt-6 **:text-center">
+        <TableHeader className="bg-primary-foreground">
           <TableRow>
             <TableHead className="">활동 코드</TableHead>
             <TableHead className="">활동 분류</TableHead>
@@ -62,7 +62,7 @@ const page = async () => {
             <TableHead>생성일</TableHead>
           </TableRow>
         </TableHeader>
-        <TableBody>
+        <TableBody className="*:not-first:border-t">
           {activities.map((activity) => (
             <TableRow key={activity.id}>
               <TableCell>

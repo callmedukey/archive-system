@@ -84,6 +84,26 @@ export const documentActivityContents = pgTable(
 
 export type ActivityContent = typeof documentActivityContents.$inferSelect;
 
+export const ActivityContentSchema = createInsertSchema(
+  documentActivityContents
+)
+  .pick({
+    name: true,
+    numericalCode: true,
+    activityTypeId: true,
+  })
+  .extend({
+    name: z
+      .string({ required_error: "활동 내용을 입력해주세요." })
+      .min(1, { message: "활동 내용을 입력해주세요." }),
+    numericalCode: z.coerce
+      .number({ required_error: "활동 내용 순서를 입력해주세요." })
+      .min(0, { message: "활동 내용 코드를 입력해주세요." }),
+    activityTypeId: z
+      .string({ required_error: "활동 분류를 선택해주세요." })
+      .min(1, { message: "활동 분류를 선택해주세요." }),
+  });
+
 export const documentActivityContentsRelations = relations(
   documentActivityContents,
   ({ one }) => ({

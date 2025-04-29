@@ -1,7 +1,17 @@
-import { useId } from "react";
+import { ComponentProps, useId } from "react";
 
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+
+interface InputWithLabelAndErrorProps extends ComponentProps<"input"> {
+  label: string;
+  name: string;
+  placeholder?: string;
+  error: string | undefined;
+  type: string;
+  defaultValue?: string;
+  step?: number;
+}
 
 export default function InputWithLabelAndError({
   label,
@@ -10,14 +20,8 @@ export default function InputWithLabelAndError({
   error,
   type,
   defaultValue,
-}: {
-  label: string;
-  name: string;
-  placeholder?: string;
-  error: string | undefined;
-  type: string;
-  defaultValue?: string;
-}) {
+  step,
+}: InputWithLabelAndErrorProps) {
   const id = useId();
 
   return (
@@ -31,6 +35,7 @@ export default function InputWithLabelAndError({
         aria-invalid={!!error}
         name={name}
         defaultValue={defaultValue}
+        step={step}
       />
       {error && (
         <p
