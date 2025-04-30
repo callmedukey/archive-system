@@ -3,6 +3,7 @@ import {
   boolean,
   foreignKey,
   integer,
+  pgEnum,
   pgTable,
   text,
   timestamp,
@@ -10,6 +11,8 @@ import {
 } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
+
+import { enumToPgEnum } from "@/lib/utils/db/enum-to-pg-enum";
 
 import { users } from "./auth";
 import { comments } from "./comments";
@@ -117,6 +120,19 @@ export const documentActivityContentsRelations = relations(
   })
 );
 
+export enum DocumentStatus {
+  SUBMITTED = "SUBMITTED",
+  EDIT_REQUESTED = "EDIT_REQUESTED",
+  EDIT_COMPLETED = "EDIT_COMPLETED",
+  UNDER_REVIEW = "UNDER_REVIEW",
+  APPROVED = "APPROVED",
+}
+
+export const documentStatuses = pgEnum(
+  "document_statuses",
+  enumToPgEnum(DocumentStatus)
+);
+
 export const documents = pgTable("documents", {
   id: uuid("id").primaryKey().defaultRandom(),
   name: text("name").notNull(),
@@ -138,7 +154,7 @@ export const documents = pgTable("documents", {
   }).notNull(),
   reportingCompany: text("reporting_company").notNull(),
   level: integer("level").notNull(),
-  status: text("status").notNull(),
+  status: documentStatuses("status").default(DocumentStatus.SUBMITTED),
 
   typeName: text("type_name").notNull(),
   typeContent: text("type_content").notNull(),

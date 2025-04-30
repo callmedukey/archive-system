@@ -2,6 +2,7 @@ import React, { Suspense } from "react";
 
 import DocumentsTable from "@/components/shared/admin/documents-table";
 import DocumentWrapper from "@/components/shared/admin/server/document-wrapper";
+import RegionsWrapper from "@/components/shared/admin/server/regions-wrapper";
 import { Skeleton } from "@/components/ui/skeleton";
 
 interface DocumentPageProps {
@@ -48,23 +49,29 @@ const page = async ({ searchParams }: DocumentPageProps) => {
           </div>
         }
       >
-        <DocumentWrapper
-          searchTerm={safeSearchTerm}
-          page={safePage}
-          limit={safeLimit}
-          orderBy={safeOrderBy}
-        >
-          {(data, totalCount) => (
-            <DocumentsTable
-              initialDocuments={data}
-              totalCount={totalCount}
-              initialPage={safePage}
-              initialLimit={safeLimit}
-              initialOrderBy={safeOrderBy}
-              initialSearchTerm={safeSearchTerm}
-            />
+        <RegionsWrapper>
+          {(regions) => (
+            <DocumentWrapper
+              searchTerm={safeSearchTerm}
+              page={safePage}
+              limit={safeLimit}
+              orderBy={safeOrderBy}
+            >
+              {(data, totalCount, documentFormats) => (
+                <DocumentsTable
+                  initialDocuments={data}
+                  totalCount={totalCount}
+                  initialPage={safePage}
+                  initialLimit={safeLimit}
+                  initialOrderBy={safeOrderBy}
+                  initialSearchTerm={safeSearchTerm}
+                  initialDocumentFormats={documentFormats}
+                  initialRegions={regions}
+                />
+              )}
+            </DocumentWrapper>
           )}
-        </DocumentWrapper>
+        </RegionsWrapper>
       </Suspense>
     </div>
   );

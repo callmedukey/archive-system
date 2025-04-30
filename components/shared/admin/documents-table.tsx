@@ -5,6 +5,7 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useState, useTransition, useCallback, useMemo } from "react";
 
 import type { DocumentWithUser } from "@/components/shared/admin/server/document-wrapper";
+import { documentFormats, Region } from "@/db/schemas";
 
 import { Skeleton } from "../../ui/skeleton";
 import {
@@ -27,6 +28,8 @@ interface DocumentsTableProps {
   initialLimit?: number;
   initialOrderBy?: "asc" | "desc";
   initialSearchTerm?: string;
+  initialDocumentFormats: (typeof documentFormats.$inferSelect)[];
+  initialRegions: Region[];
 }
 
 const DocumentsTable = ({
@@ -36,6 +39,8 @@ const DocumentsTable = ({
   initialLimit = 10, // Default should match the server page
   initialOrderBy = "desc", // Default should match the server page
   initialSearchTerm = "",
+  initialDocumentFormats,
+  initialRegions,
 }: DocumentsTableProps) => {
   const router = useRouter();
   const pathname = usePathname();
@@ -171,7 +176,10 @@ const DocumentsTable = ({
             className="md:col-span-1" // Adjust span as needed
           />
         </div>
-        <DocumentsAdvancedFilter />
+        <DocumentsAdvancedFilter
+          initialDocumentFormats={initialDocumentFormats}
+          initialRegions={initialRegions}
+        />
       </aside>
 
       {/* Table Area */}
@@ -179,7 +187,6 @@ const DocumentsTable = ({
         <Table className="**:text-center">
           <TableHeader className="bg-primary-foreground">
             <TableRow>
-              {/* Define your table headers based on DocumentWithUser */}
               <TableHead>문서명</TableHead>
               <TableHead>섬</TableHead>
               <TableHead>지역</TableHead>
@@ -192,7 +199,6 @@ const DocumentsTable = ({
             {!isPending &&
               initialDocuments.map((doc) => (
                 <TableRow key={doc.id}>
-                  {/* Populate cells, add Link for details if needed */}
                   <TableCell className="font-medium">{doc.name}</TableCell>
                   <TableCell>{doc.islandName ?? "-"}</TableCell>
                   <TableCell>{doc.regionName ?? "-"}</TableCell>

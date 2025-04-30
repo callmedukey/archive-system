@@ -4,7 +4,13 @@ import React from "react";
 
 import { auth } from "@/auth";
 import { db } from "@/db";
-import { documents, users, Role, usersToRegions } from "@/db/schemas";
+import {
+  documents,
+  users,
+  Role,
+  usersToRegions,
+  documentFormats,
+} from "@/db/schemas";
 
 export type DocumentWithUser = typeof documents.$inferSelect & {
   user: { username: string | null } | null;
@@ -15,7 +21,11 @@ interface DocumentWrapperProps {
   page?: number;
   limit?: number;
   orderBy?: "asc" | "desc";
-  children: (data: DocumentWithUser[], totalCount: number) => React.ReactNode;
+  children: (
+    data: DocumentWithUser[],
+    totalCount: number,
+    queryDocumentFormats: (typeof documentFormats.$inferSelect)[]
+  ) => React.ReactNode;
 }
 const DocumentWrapper = async ({
   searchTerm,
@@ -124,15 +134,22 @@ const DocumentWrapper = async ({
         baseCountQuery.where(finalCondition);
       }
     }
-
-    return { query: baseDataQuery, countQuery: baseCountQuery };
+    const queryDocumentFormats = await db.query.documentFormats.findMany();
+    return {
+      query: baseDataQuery,
+      countQuery: baseCountQuery,
+      queryDocumentFormats,
+    };
   };
 
-  const { query: dataQueryBuilder, countQuery: countQueryBuilder } =
-    await buildFilteredQuery();
+  const {
+    query: dataQueryBuilder,
+    countQuery: countQueryBuilder,
+    queryDocumentFormats,
+  } = await buildFilteredQuery();
 
   if (!dataQueryBuilder || !countQueryBuilder) {
-    return children([], 0);
+    return children([], 0, queryDocumentFormats ?? []);
   }
 
   const dataQuery = dataQueryBuilder
@@ -147,7 +164,11 @@ const DocumentWrapper = async ({
 
   const totalCount = countResult[0]?.count ?? 0;
 
-  return children(foundDocumentsResult as DocumentWithUser[], totalCount);
+  return children(
+    foundDocumentsResult as DocumentWithUser[],
+    totalCount,
+    queryDocumentFormats
+  );
 };
 
 export default DocumentWrapper;

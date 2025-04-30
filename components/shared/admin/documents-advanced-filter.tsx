@@ -5,6 +5,7 @@ import { Calendar as CalendarIcon, Filter } from "lucide-react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useState, useEffect, useTransition } from "react";
 
+import { getIslandsByRegion } from "@/app/(after-auth)/super-admin/actions/dashboard-filters";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import {
@@ -28,23 +29,54 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { regions } from "@/db/schemas";
+import { Island } from "@/db/schemas"; // Corrected import path
+import { documentFormats, DocumentStatus } from "@/db/schemas/documents"; // Import the enum
 import { cn } from "@/lib/utils";
 
 // Define types for your filter options if needed
 // Example:
 // type FilterOption = { label: string; value: string };
 
-const DocumentsAdvancedFilter = () => {
+// Helper function to get Korean labels (you might want to move this to a utils file)
+function getStatusLabel(status: DocumentStatus): string {
+  switch (status) {
+    case DocumentStatus.SUBMITTED:
+      return "제출됨";
+    case DocumentStatus.EDIT_REQUESTED:
+      return "수정 요청됨";
+    case DocumentStatus.EDIT_COMPLETED:
+      return "수정 완료됨";
+    case DocumentStatus.UNDER_REVIEW:
+      return "검토 중";
+    case DocumentStatus.APPROVED:
+      return "승인됨";
+    default:
+      // Ensure exhaustive check or handle unexpected values
+      const exhaustiveCheck: never = status;
+      return exhaustiveCheck;
+  }
+}
+
+interface DocumentsAdvancedFilterProps {
+  initialDocumentFormats: (typeof documentFormats.$inferSelect)[];
+  initialRegions: (typeof regions.$inferSelect)[];
+}
+
+const DocumentsAdvancedFilter = ({
+  initialDocumentFormats,
+  initialRegions,
+}: DocumentsAdvancedFilterProps) => {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const [isPending, startTransition] = useTransition();
+  const [isFetchingIslands, startFetchingIslandsTransition] = useTransition();
 
   // State for Dialog visibility
   const [isOpen, setIsOpen] = useState(false);
 
   // State for filters - Initialize with values from searchParams or defaults
-  // Example for one filter, repeat for others
   const [dataType, setDataType] = useState(
     () => searchParams.get("dataType") || "all"
   );
@@ -63,16 +95,59 @@ const DocumentsAdvancedFilter = () => {
     return dateString ? new Date(dateString) : undefined;
   });
 
-  // Effect to update state if searchParams change externally (e.g., browser back/forward)
+  // State for fetched islands
+  const [fetchedIslands, setFetchedIslands] = useState<Island[]>([]);
+
+  // Effect to update state if searchParams change externally
   useEffect(() => {
     setDataType(searchParams.get("dataType") || "all");
     setStatus(searchParams.get("status") || "all");
     setStep(searchParams.get("step") || "all");
-    setRegion(searchParams.get("region") || "all");
+    const currentRegion = searchParams.get("region") || "all";
+    setRegion(currentRegion);
     setIsland(searchParams.get("island") || "all");
     const dateString = searchParams.get("date");
     setDate(dateString ? new Date(dateString) : undefined);
+
+    // Also fetch islands if a region is present in the initial search params
+    if (currentRegion && currentRegion !== "all") {
+      startFetchingIslandsTransition(async () => {
+        const islands = await getIslandsByRegion(null, currentRegion); // Assuming Role is not needed here or default is fine
+        setFetchedIslands(islands);
+      });
+    } else {
+      setFetchedIslands([]); // Clear islands if no region or 'all'
+    }
   }, [searchParams]);
+
+  // Effect to fetch islands when region changes
+  useEffect(() => {
+    if (region && region !== "all") {
+      setFetchedIslands([]); // Clear previous islands immediately
+      setIsland("all"); // Reset island selection
+      startFetchingIslandsTransition(async () => {
+        try {
+          // Fetch islands based on the selected region
+          // Pass null for the first arg if it's unused client-side, or adjust server action
+          const islands = await getIslandsByRegion(null, region); // Adjust Role if needed
+          setFetchedIslands(islands);
+          // Optional: check if the current island selection is still valid
+          if (!islands.some((isl) => isl.id === island)) {
+            setIsland("all");
+          }
+        } catch (error) {
+          console.error("Failed to fetch islands:", error);
+          setFetchedIslands([]); // Clear on error
+          setIsland("all");
+        }
+      });
+    } else {
+      setFetchedIslands([]);
+      setIsland("all"); // Reset island if region is 'all'
+    }
+    // Intentionally not including 'island' in dependencies to avoid loops on reset
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [region]);
 
   const handleApplyFilters = () => {
     const params = new URLSearchParams(searchParams.toString());
@@ -123,7 +198,6 @@ const DocumentsAdvancedFilter = () => {
       setIsOpen(false); // Close dialog after applying
     });
   };
-
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
@@ -139,13 +213,17 @@ const DocumentsAdvancedFilter = () => {
           <Label htmlFor="data-type" className="">
             자료 분류별 보기
           </Label>
-          <Select value={dataType} onValueChange={setDataType}>
+          <Select value={dataType} onValueChange={setDataType} name="data-type">
             <SelectTrigger className="w-full rounded-lg">
               <SelectValue placeholder="전체" />
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent className="max-h-[300px] overflow-y-auto rounded-lg">
               <SelectItem value="all">전체</SelectItem>
-              {/* Add other options here */}
+              {initialDocumentFormats.map((format) => (
+                <SelectItem key={format.id} value={format.id}>
+                  {format.name}
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
         </div>
@@ -157,9 +235,13 @@ const DocumentsAdvancedFilter = () => {
             <SelectTrigger className="w-full rounded-lg">
               <SelectValue placeholder="전체" />
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent className="max-h-[300px] overflow-y-auto rounded-lg">
               <SelectItem value="all">전체</SelectItem>
-              {/* Add other options here */}
+              {Object.values(DocumentStatus).map((statusValue) => (
+                <SelectItem key={statusValue} value={statusValue}>
+                  {getStatusLabel(statusValue)}
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
         </div>
@@ -169,9 +251,12 @@ const DocumentsAdvancedFilter = () => {
             <SelectTrigger className="w-full rounded-lg">
               <SelectValue placeholder="전체" />
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent className="max-h-[300px] overflow-y-auto rounded-lg">
               <SelectItem value="all">전체</SelectItem>
-              {/* Add other options here */}
+              <SelectItem value="1">1단계</SelectItem>
+              <SelectItem value="2">2단계</SelectItem>
+              <SelectItem value="3">3단계</SelectItem>
+              <SelectItem value="4">4단계</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -184,19 +269,33 @@ const DocumentsAdvancedFilter = () => {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">전체</SelectItem>
-                {/* Add other options here */}
+                {initialRegions.map((reg) => (
+                  <SelectItem key={reg.id} value={reg.id}>
+                    {reg.name}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>
           <div>
             <Label htmlFor="island">섬별 보기</Label>
-            <Select value={island} onValueChange={setIsland}>
+            <Select
+              value={island}
+              onValueChange={setIsland}
+              disabled={region === "all" || isFetchingIslands}
+            >
               <SelectTrigger className="w-full rounded-lg">
-                <SelectValue placeholder="전체" />
+                <SelectValue
+                  placeholder={isFetchingIslands ? "불러오는 중..." : "전체"}
+                />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">전체</SelectItem>
-                {/* Add other options here */}
+                {fetchedIslands.map((isl) => (
+                  <SelectItem key={isl.id} value={isl.id}>
+                    {isl.name}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>
