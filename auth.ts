@@ -106,6 +106,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       session.user.id = token.sub as string;
       session.user.role = token.role as Role;
       session.user.regionId = token.regionId as string;
+      session.user.username = token.username as string;
       return session;
     },
     async jwt({ token }) {
@@ -113,6 +114,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         .select({
           role: users.role,
           regionId: usersToRegions.regionId,
+          username: users.username,
         })
         .from(users)
         .leftJoin(usersToRegions, eq(users.id, usersToRegions.userId))
@@ -120,7 +122,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
 
       token.role = foundUser[0].role;
       token.regionId = foundUser[0].regionId;
-
+      token.username = foundUser[0].username;
       return token;
     },
   },

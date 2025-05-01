@@ -6,8 +6,9 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useState, useTransition, useCallback, useMemo } from "react";
 
 import type { DocumentWithUser } from "@/components/shared/admin/server/document-wrapper";
-import { documentFormats, Region, Role } from "@/db/schemas";
+import { documentFormats, DocumentStatus, Region, Role } from "@/db/schemas";
 import renderBaseRolePathname from "@/lib/utils/parse/render-role-pathname";
+import statusLabels from "@/lib/utils/parse/status-labels";
 
 import { Skeleton } from "../../ui/skeleton";
 import {
@@ -188,6 +189,7 @@ const DocumentsTable = ({
         <Table className="**:text-center">
           <TableHeader className="bg-primary-foreground">
             <TableRow>
+              <TableHead>상태</TableHead>
               <TableHead>권역</TableHead>
               <TableHead>작성자</TableHead>
               <TableHead>제출자료명</TableHead>
@@ -200,6 +202,9 @@ const DocumentsTable = ({
             {!isPending &&
               initialDocuments.map((doc) => (
                 <TableRow key={doc.id}>
+                  <TableCell>
+                    {statusLabels[doc.status as DocumentStatus]}
+                  </TableCell>
                   <TableCell className="font-medium">
                     {doc.regionName ?? "-"}
                   </TableCell>

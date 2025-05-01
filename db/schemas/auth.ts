@@ -61,6 +61,9 @@ export const usersRelations = relations(users, ({ many }) => ({
   notices: many(notices),
   notifications: many(notifications),
   documents: many(documents),
+  editRequestAuthor: many(documents, {
+    relationName: "editRequestAuthor",
+  }),
 }));
 
 export const islands = pgTable("island", {

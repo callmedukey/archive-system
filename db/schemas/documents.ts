@@ -164,6 +164,13 @@ export const documents = pgTable("documents", {
   approvedDate: timestamp("approved_date", { mode: "date" }),
   editRequestDate: timestamp("edit_request_date", { mode: "date" }),
   editRequestReason: text("edit_request_reason"),
+  editCompletedDate: timestamp("edit_completed_date", { mode: "date" }),
+  editRequestAuthorId: uuid("edit_request_author_id").references(
+    () => users.id,
+    {
+      onDelete: "set null",
+    }
+  ),
 
   activityPeriodStart: timestamp("activity_period_start", { mode: "date" }),
   activityPeriodEnd: timestamp("activity_period_end", { mode: "date" }),
@@ -189,6 +196,8 @@ export const documents = pgTable("documents", {
     .defaultNow()
     .$onUpdate(() => new Date()),
 });
+
+export type DocumentType = typeof documents.$inferSelect;
 
 export const NewDocumentSchema = createInsertSchema(documents)
   .pick({
@@ -244,4 +253,8 @@ export const documentsRelations = relations(documents, ({ one, many }) => ({
   comments: many(comments),
   files: many(files),
   images: many(images),
+  editRequestAuthor: one(users, {
+    fields: [documents.editRequestAuthorId],
+    references: [users.id],
+  }),
 }));

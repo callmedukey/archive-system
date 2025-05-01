@@ -119,6 +119,9 @@ const DocumentWrapper = async ({
         createdAt: documents.createdAt,
         updatedAt: documents.updatedAt,
         user: { username: users.username },
+        editRequestDate: documents.editRequestDate,
+        editCompletedDate: documents.editCompletedDate,
+        approvedDate: documents.approvedDate,
       })
       .from(documents)
       .leftJoin(users, eq(documents.userId, users.id))
