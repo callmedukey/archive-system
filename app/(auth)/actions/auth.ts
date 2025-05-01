@@ -1,12 +1,13 @@
 "use server";
 
-import { eq } from "drizzle-orm";
+import { eq, and, or } from "drizzle-orm";
 import { AuthError } from "next-auth";
 import { ZodError } from "zod";
 
 import { signIn } from "@/auth";
 import { db } from "@/db";
 import { Role, users, usersToRegions } from "@/db/schemas";
+import { notifications } from "@/db/schemas/notifications";
 import {
   LoginSchema,
   LoginSchemaType,
@@ -83,6 +84,31 @@ export async function adminSignup(
       userId: user.id,
       regionId: region,
     });
+
+    const recipients = await db
+      .select({ id: users.id })
+      .from(users)
+      .leftJoin(usersToRegions, eq(users.id, usersToRegions.userId))
+      .where(
+        or(
+          eq(users.role, Role.SUPERADMIN),
+          and(eq(users.role, Role.ADMIN), eq(usersToRegions.regionId, region))
+        )
+      );
+
+    const recipientIds = recipients
+      .map((r) => r.id)
+      .filter((id) => id !== user.id);
+
+    if (recipientIds.length > 0) {
+      await db.insert(notifications).values(
+        recipientIds.map((recipientId) => ({
+          title: "관리자 계정 승인 요청",
+          content: `새로운 관리자 ${username}님의 계정 승인이 필요합니다.`,
+          userId: recipientId,
+        }))
+      );
+    }
 
     response.success = true;
     response.message = "관리자 회원가입 신청이 완료되었습니다.";
@@ -176,6 +202,31 @@ export async function userSignup(
       userId: user.id,
       regionId: region,
     });
+
+    const recipients = await db
+      .select({ id: users.id })
+      .from(users)
+      .leftJoin(usersToRegions, eq(users.id, usersToRegions.userId))
+      .where(
+        or(
+          eq(users.role, Role.SUPERADMIN),
+          and(eq(users.role, Role.ADMIN), eq(usersToRegions.regionId, region))
+        )
+      );
+
+    const recipientIds = recipients
+      .map((r) => r.id)
+      .filter((id) => id !== user.id);
+
+    if (recipientIds.length > 0) {
+      await db.insert(notifications).values(
+        recipientIds.map((recipientId) => ({
+          title: "등록자 계정 승인 요청",
+          content: `새로운 등록자 ${username}님의 계정 승인이 필요합니다.`,
+          userId: recipientId,
+        }))
+      );
+    }
 
     response.success = true;
     response.message = "등록자 회원가입 신청이 완료되었습니다.";

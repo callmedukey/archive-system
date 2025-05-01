@@ -56,15 +56,13 @@ const DashboardMainClient = ({
   };
 
   const initialPlaceholderData = [
-    ["월별보고", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-    ["활동계획", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-    ["진행계획", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-    ["활동보고", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+    ["월별보고", 3, 5, 2, 4, 0, 1, 3, 5, 2, 1, 4, 0],
+    ["활동계획", 5, 2, 4, 1, 0, 3, 2, 5, 0, 4, 3, 1],
+    ["진행계획", 1, 4, 3, 0, 2, 5, 3, 1, 4, 5, 0, 2],
+    ["활동보고", 2, 0, 5, 1, 3, 2, 4, 0, 5, 3, 1, 4],
   ];
 
-  // Calculate monthly totals across all categories
   const chartData = Array.from({ length: 12 }, (_, monthIndex) => {
-    // For each month, sum values across all categories
     const monthTotal = initialPlaceholderData.reduce(
       (sum, category) => sum + Number(category[monthIndex + 1]),
       0

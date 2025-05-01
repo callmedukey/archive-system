@@ -22,49 +22,49 @@ const page = async () => {
           title="제안서 및 협약 서류"
           data={[
             {
-              title: "뚝불나니야 섬 PM단 제안서",
+              title: "A섬 PM단 제안서",
               date: "2024.04.15",
             },
             {
-              title: "뚝불나니야 섬 PM단 제안서",
+              title: "B섬 PM단 협약서류",
               date: "2024.04.15",
             },
             {
-              title: "뚝불나니야 섬 PM단 제안서",
-              date: "2024.04.15",
-            },
-          ]}
-        />
-        <DashboardInfoTableCard
-          title="제안서 및 협약 서류"
-          data={[
-            {
-              title: "뚝불나니야 섬 PM단 제안서",
-              date: "2024.04.15",
-            },
-            {
-              title: "뚝불나니야 섬 PM단 제안서",
-              date: "2024.04.15",
-            },
-            {
-              title: "뚝불나니야 섬 PM단 제안서",
+              title: "C섬 착수계",
               date: "2024.04.15",
             },
           ]}
         />
         <DashboardInfoTableCard
-          title="제안서 및 협약 서류"
+          title="월간보고서 등록 현황"
           data={[
             {
-              title: "뚝불나니야 섬 PM단 제안서",
+              title: "A섬 4월 월간보고서 V1",
               date: "2024.04.15",
             },
             {
-              title: "뚝불나니야 섬 PM단 제안서",
+              title: "B섬 4월 월간보고서 V1",
               date: "2024.04.15",
             },
             {
-              title: "뚝불나니야 섬 PM단 제안서",
+              title: "C섬 4월 월간보고서 V1",
+              date: "2024.04.15",
+            },
+          ]}
+        />
+        <DashboardInfoTableCard
+          title="운영결과보고서 등록 현황"
+          data={[
+            {
+              title: "A섬 운영결과보고서 (2024)",
+              date: "2024.04.15",
+            },
+            {
+              title: "B섬 운영결과보고서 (2024)",
+              date: "2024.04.15",
+            },
+            {
+              title: "C섬 운영결과보고서 (2024)",
               date: "2024.04.15",
             },
           ]}
@@ -96,52 +96,52 @@ const page = async () => {
       </section>
       <aside className="grid lg:grid-cols-3 gap-2 mt-6">
         <DashboardInfoTableCard
-          title="제안서 및 협약 서류"
+          title="운영결과보고서 등록 현황"
           data={[
             {
-              title: "뚝불나니야 섬 PM단 제안서",
+              title: "A섬 운영결과보고서",
               date: "2024.04.15",
             },
             {
-              title: "뚝불나니야 섬 PM단 제안서",
+              title: "B섬 운영결과보고서",
               date: "2024.04.15",
             },
             {
-              title: "뚝불나니야 섬 PM단 제안서",
+              title: "C섬 운영결과보고서",
               date: "2024.04.15",
             },
           ]}
         />
         <DashboardInfoTableCard
-          title="제안서 및 협약 서류"
+          title="1~4단계 마을발전계획서"
           data={[
             {
-              title: "뚝불나니야 섬 PM단 제안서",
+              title: "A섬 마을발전계획서 (1단계)",
               date: "2024.04.15",
             },
             {
-              title: "뚝불나니야 섬 PM단 제안서",
+              title: "B섬 마을발전계획서 (2단계)",
               date: "2024.04.15",
             },
             {
-              title: "뚝불나니야 섬 PM단 제안서",
+              title: "C섬 마을발전계획서 (3단계)",
               date: "2024.04.15",
             },
           ]}
         />
         <DashboardInfoTableCard
-          title="제안서 및 협약 서류"
+          title="문의사항"
           data={[
             {
-              title: "뚝불나니야 섬 PM단 제안서",
+              title: "사용법 문의사항입니다",
               date: "2024.04.15",
             },
             {
-              title: "뚝불나니야 섬 PM단 제안서",
+              title: "문서 형식 문의사항입니다",
               date: "2024.04.15",
             },
             {
-              title: "뚝불나니야 섬 PM단 제안서",
+              title: "문서 형식 문의사항입니다",
               date: "2024.04.15",
             },
           ]}
