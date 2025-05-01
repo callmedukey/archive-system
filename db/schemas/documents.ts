@@ -245,6 +245,7 @@ export const documentsRelations = relations(documents, ({ one, many }) => ({
   user: one(users, {
     fields: [documents.userId],
     references: [users.id],
+    relationName: "documents",
   }),
   format: one(documentFormats, {
     fields: [documents.formatId],
@@ -256,5 +257,6 @@ export const documentsRelations = relations(documents, ({ one, many }) => ({
   editRequestAuthor: one(users, {
     fields: [documents.editRequestAuthorId],
     references: [users.id],
+    relationName: "editRequestAuthor",
   }),
 }));

@@ -60,7 +60,9 @@ export const usersRelations = relations(users, ({ many }) => ({
   regions: many(usersToRegions),
   notices: many(notices),
   notifications: many(notifications),
-  documents: many(documents),
+  documents: many(documents, {
+    relationName: "documents",
+  }),
   editRequestAuthor: many(documents, {
     relationName: "editRequestAuthor",
   }),

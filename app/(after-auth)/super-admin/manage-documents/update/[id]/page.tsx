@@ -1,10 +1,9 @@
 import { eq } from "drizzle-orm";
 import { notFound } from "next/navigation";
 
+import NewDocumentFormatPage from "@/components/shared/new-document-format-page";
 import { db } from "@/db";
 import { documentFormats } from "@/db/schemas";
-
-import NewDocumentFormatPage from "../../new/page";
 
 interface PageProps {
   params: Promise<{
