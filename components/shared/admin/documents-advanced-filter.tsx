@@ -1,9 +1,11 @@
 "use client";
 
 import { format } from "date-fns";
+import { ko } from "date-fns/locale";
 import { Calendar as CalendarIcon, Filter } from "lucide-react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useState, useEffect, useTransition } from "react";
+import { DateRange } from "react-day-picker";
 
 import { getIslandsByRegion } from "@/app/(after-auth)/super-admin/actions/dashboard-filters";
 import { Button } from "@/components/ui/button";
@@ -90,9 +92,13 @@ const DocumentsAdvancedFilter = ({
   const [island, setIsland] = useState(
     () => searchParams.get("island") || "all"
   );
-  const [date, setDate] = useState<Date | undefined>(() => {
-    const dateString = searchParams.get("date");
-    return dateString ? new Date(dateString) : undefined;
+  const [date, setDate] = useState<DateRange | undefined>({
+    from: searchParams.get("dateFrom")
+      ? new Date(searchParams.get("dateFrom") as string)
+      : undefined,
+    to: searchParams.get("dateTo")
+      ? new Date(searchParams.get("dateTo") as string)
+      : undefined,
   });
 
   // State for fetched islands
@@ -106,8 +112,12 @@ const DocumentsAdvancedFilter = ({
     const currentRegion = searchParams.get("region") || "all";
     setRegion(currentRegion);
     setIsland(searchParams.get("island") || "all");
-    const dateString = searchParams.get("date");
-    setDate(dateString ? new Date(dateString) : undefined);
+    const dateFrom = searchParams.get("dateFrom");
+    const dateTo = searchParams.get("dateTo");
+    setDate({
+      from: dateFrom ? new Date(dateFrom) : undefined,
+      to: dateTo ? new Date(dateTo) : undefined,
+    });
 
     // Also fetch islands if a region is present in the initial search params
     if (currentRegion && currentRegion !== "all") {
@@ -188,16 +198,26 @@ const DocumentsAdvancedFilter = ({
 
     if (date) {
       // Format date consistently, e.g., YYYY-MM-DD
-      params.set("date", format(date, "yyyy-MM-dd"));
+      params.set("dateFrom", date.from ? format(date.from, "yyyy-MM-dd") : "");
+      params.set("dateTo", date.to ? format(date.to, "yyyy-MM-dd") : "");
     } else {
-      params.delete("date");
+      params.delete("dateFrom");
+      params.delete("dateTo");
     }
 
     startTransition(() => {
-      router.replace(`${pathname}?${params.toString()}`);
+      router.push(`${pathname}?${params.toString()}`);
       setIsOpen(false); // Close dialog after applying
     });
   };
+
+  const handleReset = () => {
+    setDate({
+      from: undefined,
+      to: undefined,
+    });
+  };
+
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
@@ -205,7 +225,13 @@ const DocumentsAdvancedFilter = ({
           <Filter className="w-4 h-4" /> 검색 필터
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent
+        className="sm:max-w-[425px]"
+        onInteractOutside={(e) => {
+          // Prevent closing the dialog when interacting with the popover content
+          e.preventDefault();
+        }}
+      >
         <DialogHeader>
           <DialogTitle>검색 필터</DialogTitle>
         </DialogHeader>
@@ -300,12 +326,12 @@ const DocumentsAdvancedFilter = ({
             </Select>
           </div>
         </div>
-        <div className="">
+        <div className="flex flex-col gap-2">
           <Label htmlFor="date-range">기간별 보기</Label>
-          <Popover>
+          <Popover modal={true}>
             <PopoverTrigger asChild>
               <Button
-                id="date-range"
+                id="date"
                 variant={"outline"}
                 className={cn(
                   "w-full justify-start text-left font-normal",
@@ -313,16 +339,53 @@ const DocumentsAdvancedFilter = ({
                 )}
               >
                 <CalendarIcon className="mr-2 h-4 w-4" />
-                {date ? format(date, "PPP") : <span>기간 선택</span>}
+                {date?.from ? (
+                  date.to ? (
+                    <>
+                      {format(date.from, "yyyy-MM-dd", { locale: ko })} -{" "}
+                      {format(date.to, "yyyy-MM-dd", { locale: ko })}
+                    </>
+                  ) : (
+                    format(date.from, "yyyy-MM-dd", { locale: ko })
+                  )
+                ) : (
+                  <span>날짜 선택</span>
+                )}
               </Button>
             </PopoverTrigger>
-            <PopoverContent className="w-auto p-0">
+            <PopoverContent
+              className="w-auto p-0"
+              align="start"
+              onClick={(e) => e.stopPropagation()}
+            >
               <Calendar
-                mode="single"
+                disabled={isPending}
+                mode="range"
+                defaultMonth={date?.from}
                 selected={date}
                 onSelect={setDate}
-                initialFocus
+                numberOfMonths={2}
+                locale={ko}
+                pagedNavigation
+                showOutsideDays={false}
+                className="rounded-md p-2"
+                classNames={{
+                  months: "gap-8",
+                  month:
+                    "relative first-of-type:before:hidden before:absolute max-sm:before:inset-x-2 max-sm:before:h-px max-sm:before:-top-2 sm:before:inset-y-2 sm:before:w-px before:bg-border sm:before:-left-4",
+                }}
               />
+              <div className="flex justify-between p-2">
+                <Button
+                  size={"sm"}
+                  type="button"
+                  onClick={handleReset}
+                  className="rounded-lg"
+                  variant={"outline"}
+                >
+                  초기화
+                </Button>
+              </div>
             </PopoverContent>
           </Popover>
         </div>
