@@ -175,6 +175,8 @@ export const documents = pgTable("documents", {
     "outer_activity_participants_number"
   ),
 
+  content: text("content").notNull(),
+
   formatId: uuid("format_id").references(() => documentFormats.id, {
     onDelete: "set null",
   }),

@@ -1,0 +1,138 @@
+"use server";
+
+import { eq, or, and } from "drizzle-orm";
+
+import { auth } from "@/auth";
+import { db } from "@/db";
+import {
+  documents,
+  files,
+  images,
+  NewDocumentSchema,
+  notifications,
+  users,
+  Role,
+  usersToRegions,
+} from "@/db/schemas";
+import getNextVersionNumber from "@/lib/utils/parse/get-next-version-number";
+
+import { CreateDocumentProps } from "../../../new/[formatId]/actions/create-document";
+
+interface CreateNewVersionDocumentProps extends CreateDocumentProps {
+  previousDocumentName: string;
+}
+
+export const createNewVersionDocument = async ({
+  userId,
+  formatId,
+  newFiles,
+  newImages,
+  content,
+  previousDocumentName,
+  ...submittedData
+}: CreateNewVersionDocumentProps) => {
+  const session = await auth();
+
+  if (!session) {
+    return {
+      success: false,
+      message: "로그인이 필요합니다.",
+    };
+  }
+
+  const result = NewDocumentSchema.safeParse(submittedData);
+
+  if (!result.success) {
+    return {
+      success: false,
+      message: "입력 값이 올바르지 않습니다.",
+      error: result.error.flatten().fieldErrors,
+    };
+  }
+
+  const { data } = result;
+
+  const reportMonth = data.reportDate.getMonth() + 1;
+  const reportYear = data.reportDate.getFullYear();
+
+  try {
+    const userRegions = await db.query.usersToRegions.findMany({
+      where: eq(usersToRegions.userId, userId),
+      columns: { regionId: true },
+    });
+
+    const creatorRegionId =
+      userRegions.length > 0 ? userRegions[0].regionId : null;
+
+    const [document] = await db
+      .insert(documents)
+      .values({
+        ...data,
+        userId,
+        formatId,
+        reportMonth,
+        reportYear,
+        name: `${reportMonth}월 ${data.name} V${getNextVersionNumber(
+          previousDocumentName
+        )}`,
+        content,
+      })
+      .returning({ id: documents.id });
+
+    const imagePromises = newImages.map((image) =>
+      db
+        .update(images)
+        .set({ documentId: document.id })
+        .where(eq(images.url, image.url) && eq(images.key, image.key))
+    );
+    const filePromises = newFiles.map((file) =>
+      db
+        .update(files)
+        .set({ documentId: document.id })
+        .where(eq(files.url, file.url) && eq(files.key, file.key))
+    );
+
+    await Promise.all([...imagePromises, ...filePromises]);
+
+    const usersToNotifyQuery = db
+      .selectDistinct({ id: users.id })
+      .from(users)
+      .leftJoin(usersToRegions, eq(users.id, usersToRegions.userId))
+      .where(
+        or(
+          eq(users.role, Role.SUPERADMIN),
+          creatorRegionId
+            ? and(
+                eq(users.role, Role.ADMIN),
+                eq(usersToRegions.regionId, creatorRegionId)
+              )
+            : undefined
+        )
+      );
+
+    const usersToNotify = await usersToNotifyQuery;
+
+    const notificationData = usersToNotify.map((user) => ({
+      userId: user.id,
+      documentId: document.id,
+      title: "새로운 문서가 생성되었습니다.",
+      content: `등록자 ${session.user.username}에 의해 ${reportMonth}월 ${data.name} 문서가 생성되었습니다.`,
+    }));
+
+    if (notificationData.length > 0) {
+      await db.insert(notifications).values(notificationData);
+    }
+
+    return {
+      success: true,
+      message: "문서가 생성되었습니다.",
+      documentId: document.id,
+    };
+  } catch (err) {
+    console.error(err);
+    return {
+      success: false,
+      error: "문서 생성 중 오류가 발생했습니다.",
+    };
+  }
+};

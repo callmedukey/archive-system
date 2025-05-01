@@ -11,6 +11,7 @@ import {
 import { z } from "zod";
 
 import { users } from "./auth";
+import { documents } from "./documents";
 import { inquiries } from "./inquiries";
 import { notices } from "./notices";
 
@@ -31,6 +32,9 @@ export const notifications = pgTable("notifications", {
   inquiryId: integer("inquiry_id").references(() => inquiries.id, {
     onDelete: "cascade",
   }),
+  documentId: uuid("document_id").references(() => documents.id, {
+    onDelete: "cascade",
+  }),
 });
 
 export const notificationRelations = relations(notifications, ({ one }) => ({
@@ -45,6 +49,10 @@ export const notificationRelations = relations(notifications, ({ one }) => ({
   inquiry: one(inquiries, {
     fields: [notifications.inquiryId],
     references: [inquiries.id],
+  }),
+  document: one(documents, {
+    fields: [notifications.documentId],
+    references: [documents.id],
   }),
 }));
 

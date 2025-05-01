@@ -1,7 +1,8 @@
 "use server";
 
-import { eq } from "drizzle-orm";
+import { eq, or, and } from "drizzle-orm";
 
+import { auth } from "@/auth";
 import { db } from "@/db";
 import {
   documents,
@@ -9,13 +10,18 @@ import {
   images,
   NewDocumentSchema,
   NewDocumentType,
+  notifications,
+  users,
+  Role,
+  usersToRegions,
 } from "@/db/schemas";
 
-type CreateDocumentProps = NewDocumentType & {
+export type CreateDocumentProps = NewDocumentType & {
   userId: string;
   formatId: string;
   newFiles: { url: string; key: string }[];
   newImages: { url: string; key: string }[];
+  content: string;
 };
 
 export const createDocument = async ({
@@ -23,8 +29,17 @@ export const createDocument = async ({
   formatId,
   newFiles,
   newImages,
+  content,
   ...submittedData
 }: CreateDocumentProps) => {
+  const session = await auth();
+  if (!session) {
+    return {
+      success: false,
+      message: "로그인이 필요합니다.",
+    };
+  }
+
   const result = NewDocumentSchema.safeParse(submittedData);
 
   if (!result.success) {
@@ -41,6 +56,14 @@ export const createDocument = async ({
   const reportYear = data.reportDate.getFullYear();
 
   try {
+    const userRegions = await db.query.usersToRegions.findMany({
+      where: eq(usersToRegions.userId, userId),
+      columns: { regionId: true },
+    });
+
+    const creatorRegionId =
+      userRegions.length > 0 ? userRegions[0].regionId : null;
+
     const [document] = await db
       .insert(documents)
       .values({
@@ -50,6 +73,7 @@ export const createDocument = async ({
         reportMonth,
         reportYear,
         name: `${reportMonth}월 ${data.name} V1`,
+        content,
       })
       .returning({ id: documents.id });
 
@@ -68,6 +92,35 @@ export const createDocument = async ({
 
     await Promise.all([...imagePromises, ...filePromises]);
 
+    const usersToNotifyQuery = db
+      .selectDistinct({ id: users.id })
+      .from(users)
+      .leftJoin(usersToRegions, eq(users.id, usersToRegions.userId))
+      .where(
+        or(
+          eq(users.role, Role.SUPERADMIN),
+          creatorRegionId
+            ? and(
+                eq(users.role, Role.ADMIN),
+                eq(usersToRegions.regionId, creatorRegionId)
+              )
+            : undefined
+        )
+      );
+
+    const usersToNotify = await usersToNotifyQuery;
+
+    const notificationData = usersToNotify.map((user) => ({
+      userId: user.id,
+      documentId: document.id,
+      title: "새로운 문서가 생성되었습니다.",
+      content: `등록자 ${session.user.username}에 의해 ${reportMonth}월 ${data.name} 문서가 생성되었습니다.`,
+    }));
+
+    if (notificationData.length > 0) {
+      await db.insert(notifications).values(notificationData);
+    }
+
     return {
       success: true,
       message: "문서가 생성되었습니다.",
@@ -77,7 +130,7 @@ export const createDocument = async ({
     console.error(err);
     return {
       success: false,
-      error: "문서 생성에 실패했습니다.",
+      error: "문서 생성 중 오류가 발생했습니다.",
     };
   }
 };

@@ -10,7 +10,6 @@ import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 
 import { deleteFiles } from "@/app/(after-auth)/super-admin/actions/delete-files";
-import { createDocument } from "@/app/(after-auth)/user/documents/new/[formatId]/actions/create-documen";
 import ButtonWithLoading from "@/components/shared/button-with-loading";
 import DownloadButton from "@/components/shared/download-button";
 import { SimpleEditor } from "@/components/tiptap-templates/simple/simple-editor";
@@ -36,6 +35,8 @@ import { DocumentFormat } from "@/db/schemas";
 import { getFileKeyFromUrl } from "@/lib/image-url";
 import { UploadButton } from "@/lib/utils/uploadthing";
 
+import { createNewVersionDocument } from "../../../[documentId]/new-version/actions/create-new-version";
+
 interface NewDocumentFormProps {
   format: DocumentFormat;
   regionName: string;
@@ -46,6 +47,14 @@ interface NewDocumentFormProps {
   contractPeriodEnd: string;
   company: string;
   userId: string;
+  existingContent?: string;
+  existingImages?: { url: string; key: string }[];
+  existingFiles?: { name: string; url: string; key: string }[];
+  reporter?: string;
+  version?: string;
+  documentName?: string;
+  reportMonth?: string;
+  previousFormatId?: string;
 }
 
 const NewDocumentForm = ({
@@ -58,6 +67,14 @@ const NewDocumentForm = ({
   contractPeriodEnd,
   company,
   userId,
+  existingContent,
+  existingImages,
+  existingFiles,
+  reporter,
+  version,
+  documentName,
+  reportMonth,
+  previousFormatId,
 }: NewDocumentFormProps) => {
   const [isPending, startTransition] = useTransition();
   const { formatId } = useParams();
@@ -70,25 +87,33 @@ const NewDocumentForm = ({
       company,
       regionName,
       reportDate: formatDate(reportDate, "yyyy-MM-dd"),
-      reporter: "",
+      reporter: reporter || "",
       reportingCompany: company,
     },
   });
   const router = useRouter();
 
-  const [content, setContent] = useState(format.content || "");
+  const [content, setContent] = useState(
+    existingContent || format.content || ""
+  );
   const [imageUrls, setImageUrls] = useState<{ url: string; key: string }[]>(
-    []
+    existingImages || []
   );
   const [fileUrls, setFileUrls] = useState<
     { name: string; url: string; key: string }[]
-  >([]);
+  >(existingFiles || []);
   const [uploadingImage, setUploadingImage] = useState(false);
   const [uploadingFile, setUploadingFile] = useState(false);
   const [isConfirmDialogOpen, setIsConfirmDialogOpen] = useState(false);
 
   const handleManualSubmit = () => {
     const data = form.getValues();
+
+    if (!previousFormatId && !formatId) {
+      toast.error("보고서 양식을 불러올수 없습니다");
+      return;
+    }
+
     if (content.length === 0) {
       toast.error("내용을 입력해주세요.");
       return;
@@ -124,16 +149,15 @@ const NewDocumentForm = ({
       return;
     }
 
-    // If all validations pass, open the confirmation dialog
     setIsConfirmDialogOpen(true);
   };
 
   const confirmSubmit = () => {
-    const data = form.getValues(); // Get values again, though they should be the same
+    const data = form.getValues();
     startTransition(async () => {
-      const { success, message, documentId } = await createDocument({
+      const { success, message, documentId } = await createNewVersionDocument({
         userId,
-        formatId: formatId as string,
+        formatId: previousFormatId || (formatId as string),
         name: format.name,
         newFiles: fileUrls.map((file) => ({ url: file.url, key: file.key })),
         newImages: imageUrls.map((image) => ({
@@ -148,9 +172,11 @@ const NewDocumentForm = ({
         reporter: data.reporter,
         islandName: data.islandName,
         regionName: data.regionName,
+        content: content,
+        previousDocumentName: documentName || "",
       });
 
-      setIsConfirmDialogOpen(false); // Close dialog after submission attempt
+      setIsConfirmDialogOpen(false);
       if (success) {
         router.push(`/user/documents/${documentId}`);
       } else {
@@ -194,7 +220,9 @@ const NewDocumentForm = ({
     <Form {...form}>
       <form className="max-w-[793px] mx-auto bg-white p-2 mt-6 shadow-md">
         <h1 className="text-3xl font-bold text-center mb-6 pb-2 border-b-2 border-gray-300">
-          {"월간 보고서"}
+          {format.name === "월간보고서" &&
+            version &&
+            `${reportMonth}월 ${format.name} ${version}`}
         </h1>
 
         <div className="grid grid-cols-[auto_2fr_auto_3fr_auto_1fr_auto_2fr] border-collapse border border-gray-400 mb-6 text-sm">
@@ -209,7 +237,8 @@ const NewDocumentForm = ({
                 <FormControl>
                   <Input
                     {...field}
-                    className="border-none rounded-none p-2 h-full focus-visible:ring-0 focus-visible:ring-offset-0"
+                    className="border-none rounded-none p-2 h-full focus-visible:ring-0 focus-visible:ring-offset-0 disabled:text-black"
+                    disabled
                   />
                 </FormControl>
               </FormItem>
@@ -226,7 +255,8 @@ const NewDocumentForm = ({
                 <FormControl>
                   <Input
                     {...field}
-                    className="border-none rounded-none p-2 h-full focus-visible:ring-0 focus-visible:ring-offset-0"
+                    className="border-none rounded-none p-2 h-full focus-visible:ring-0 focus-visible:ring-offset-0 disabled:text-black"
+                    disabled
                   />
                 </FormControl>
               </FormItem>
@@ -244,6 +274,7 @@ const NewDocumentForm = ({
                   <Input
                     {...field}
                     className="border-none rounded-none p-2 h-full focus-visible:ring-0 focus-visible:ring-offset-0"
+                    disabled
                   />
                 </FormControl>
               </FormItem>
@@ -270,7 +301,7 @@ const NewDocumentForm = ({
           <FormLabel className="font-semibold bg-gray-100 p-2 border border-gray-400 text-center flex items-center justify-center">
             계약기간
           </FormLabel>
-          <div className="p-2 border border-gray-400 flex items-center whitespace-nowrap">
+          <div className="p-2 border border-gray-400 flex items-center whitespace-nowrap opacity-50">
             {contractPeriod}
           </div>
 
@@ -285,7 +316,8 @@ const NewDocumentForm = ({
                 <FormControl>
                   <Input
                     {...field}
-                    className="border-none rounded-none p-2 h-full focus-visible:ring-0 focus-visible:ring-offset-0"
+                    className="border-none rounded-none p-2 h-full focus-visible:ring-0 focus-visible:ring-offset-0 disabled:text-black"
+                    disabled
                   />
                 </FormControl>
               </FormItem>

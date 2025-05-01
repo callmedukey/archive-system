@@ -9,8 +9,10 @@ import {
   comments,
   CreateCommentSchema,
   CreateCommentSchemaType,
+  Role,
   users,
 } from "@/db/schemas";
+import renderBaseRolePathname from "@/lib/utils/parse/render-role-pathname";
 import { ActionResponse } from "@/types/action";
 
 export async function createComment(
@@ -42,7 +44,7 @@ export async function createComment(
     return response;
   }
 
-  const { content, noticeId, inquiryId } = result.data;
+  const { content, noticeId, inquiryId, documentId } = result.data;
 
   const promises = [
     db.query.users.findFirst({
@@ -66,6 +68,13 @@ export async function createComment(
     );
   }
 
+  if (documentId) {
+    promises.push(
+      db.query.users.findFirst({
+        where: eq(users.id, session.user.id),
+      })
+    );
+  }
   const [user] = await Promise.all(promises);
 
   if (!user) {
@@ -89,12 +98,33 @@ export async function createComment(
     });
   }
 
+  if (documentId) {
+    await db.insert(comments).values({
+      content,
+      documentId,
+      authorId: user.id,
+    });
+  }
   if (noticeId) {
-    revalidatePath(`/user/notice/${noticeId}`);
+    revalidatePath(
+      `/${renderBaseRolePathname(session.user.role as Role)}/notice/${noticeId}`
+    );
   }
 
   if (inquiryId) {
-    revalidatePath(`/user/inquiries/${inquiryId}`);
+    revalidatePath(
+      `/${renderBaseRolePathname(
+        session.user.role as Role
+      )}/inquiries/${inquiryId}`
+    );
+  }
+
+  if (documentId) {
+    revalidatePath(
+      `/${renderBaseRolePathname(
+        session.user.role as Role
+      )}/documents/${documentId}`
+    );
   }
 
   response.success = true;

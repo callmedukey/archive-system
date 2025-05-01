@@ -39,8 +39,8 @@ const DocumentsTable = ({
   initialDocuments,
   totalCount,
   initialPage = 1,
-  initialLimit = 10, // Default should match the server page
-  initialOrderBy = "desc", // Default should match the server page
+  initialLimit = 10,
+  initialOrderBy = "desc",
   initialSearchTerm = "",
   initialDocumentFormats,
   initialRegions,
@@ -52,8 +52,8 @@ const DocumentsTable = ({
 
   const [searchTerm, setSearchTerm] = useState(initialSearchTerm);
   const [page, setPage] = useState(initialPage);
-  const [limit, setLimit] = useState(initialLimit); // Manage limit if needed
-  const [orderBy, setOrderBy] = useState<"asc" | "desc">(initialOrderBy); // Manage order if needed
+  const [limit, setLimit] = useState(initialLimit);
+  const [orderBy, setOrderBy] = useState<"asc" | "desc">(initialOrderBy);
   const [isPending, startTransition] = useTransition();
 
   const buildQueryString = useMemo(
@@ -92,7 +92,6 @@ const DocumentsTable = ({
           newOrderBy,
           newSearchTerm
         );
-        // Using replace to avoid polluting history for filters/search
         router.replace(`${pathname}?${queryString}`);
       });
     },
@@ -108,16 +107,15 @@ const DocumentsTable = ({
   );
 
   const handleSearch = useCallback(() => {
-    setPage(1); // Reset to page 1 on new search
+    setPage(1);
     handleNavigation(1, limit, orderBy, searchTerm);
   }, [limit, orderBy, searchTerm, handleNavigation]);
 
-  // Add handleLimitChange and handleOrderChange if implementing those controls
   const handleOrderChange = useCallback(
     (value: string | number) => {
       const newOrderBy = value as "asc" | "desc";
       setOrderBy(newOrderBy);
-      setPage(1); // Reset to page 1
+      setPage(1);
       handleNavigation(1, limit, newOrderBy, searchTerm);
     },
     [limit, searchTerm, handleNavigation]
@@ -128,7 +126,7 @@ const DocumentsTable = ({
       const numericLimit = parseInt(String(newLimitValue), 10);
       if (isNaN(numericLimit)) return;
       setLimit(numericLimit);
-      setPage(1); // Reset to page 1
+      setPage(1);
       handleNavigation(1, numericLimit, orderBy, searchTerm);
     },
     [orderBy, searchTerm, handleNavigation]
@@ -140,7 +138,6 @@ const DocumentsTable = ({
     <div>
       {/* Control Area: Search, Filters, etc. */}
       <aside className="flex justify-between items-end mt-6 gap-2">
-        {/* Adjust max-width and grid layout as needed */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-2 lg:gap-4 items-baseline md:max-w-md max-w-xs">
           <SearchInputWithButton
             value={searchTerm}
@@ -148,9 +145,8 @@ const DocumentsTable = ({
             onChange={(e) => setSearchTerm(e.target.value)}
             disabled={isPending}
             onSearch={handleSearch}
-            className="md:col-span-3" // Example: make search span full width on mobile
+            className="md:col-span-3"
           />
-          {/* Add SelectWithLabel for OrderBy and Limit here if desired */}
           <SelectWithLabel
             label=""
             disabled={isPending}
@@ -162,7 +158,7 @@ const DocumentsTable = ({
               { label: "오래된순", value: "asc" },
             ]}
             name="orderBy"
-            className="md:col-span-1" // Adjust span as needed
+            className="md:col-span-1"
           />
           <SelectWithLabel
             label=""
@@ -177,7 +173,7 @@ const DocumentsTable = ({
               { label: "100개씩", value: "100" },
             ]}
             name="limit"
-            className="md:col-span-1" // Adjust span as needed
+            className="md:col-span-1"
           />
         </div>
         <DocumentsAdvancedFilter

@@ -12,9 +12,11 @@ import { Textarea } from "../ui/textarea";
 const FormCreateComment = ({
   noticeId,
   inquiryId,
+  documentId,
 }: {
   noticeId?: number;
   inquiryId?: number;
+  documentId?: string;
 }) => {
   const [state, action, isPending] = useActionState(createComment, {
     success: false,
@@ -34,6 +36,9 @@ const FormCreateComment = ({
         {noticeId && <input type="hidden" name="noticeId" value={noticeId} />}
         {inquiryId && (
           <input type="hidden" name="inquiryId" value={inquiryId} />
+        )}
+        {documentId && (
+          <input type="hidden" name="documentId" value={documentId} />
         )}
         <Textarea
           className="w-full p-2 border rounded focus:ring-blue-500 focus:border-blue-500"
