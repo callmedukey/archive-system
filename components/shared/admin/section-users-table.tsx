@@ -29,7 +29,7 @@ const SectionUsersTable = () => {
   };
 
   return (
-    <section className="mt-6">
+    <section className="mt-6 max-w-full">
       {role === Role.USER && (
         <UsersTable
           isPending={isPending}

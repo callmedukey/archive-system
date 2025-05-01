@@ -31,7 +31,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { regions } from "@/db/schemas";
+import { regions, Role } from "@/db/schemas";
 import { Island } from "@/db/schemas"; // Corrected import path
 import { documentFormats, DocumentStatus } from "@/db/schemas/documents"; // Import the enum
 import { cn } from "@/lib/utils";
@@ -63,11 +63,13 @@ function getStatusLabel(status: DocumentStatus): string {
 interface DocumentsAdvancedFilterProps {
   initialDocumentFormats: (typeof documentFormats.$inferSelect)[];
   initialRegions: (typeof regions.$inferSelect)[];
+  role: Role;
 }
 
 const DocumentsAdvancedFilter = ({
   initialDocumentFormats,
   initialRegions,
+  role,
 }: DocumentsAdvancedFilterProps) => {
   const router = useRouter();
   const pathname = usePathname();
@@ -271,61 +273,66 @@ const DocumentsAdvancedFilter = ({
             </SelectContent>
           </Select>
         </div>
-        <div>
-          <Label htmlFor="step">단계별 보기</Label>
-          <Select value={step} onValueChange={setStep}>
-            <SelectTrigger className="w-full rounded-lg">
-              <SelectValue placeholder="전체" />
-            </SelectTrigger>
-            <SelectContent className="max-h-[300px] overflow-y-auto rounded-lg">
-              <SelectItem value="all">전체</SelectItem>
-              <SelectItem value="1">1단계</SelectItem>
-              <SelectItem value="2">2단계</SelectItem>
-              <SelectItem value="3">3단계</SelectItem>
-              <SelectItem value="4">4단계</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-        <div className="grid grid-cols-2 gap-4">
+        {role !== Role.USER && (
           <div>
-            <Label htmlFor="region">권역 선택</Label>
-            <Select value={region} onValueChange={setRegion}>
+            <Label htmlFor="step">단계별 보기</Label>
+            <Select value={step} onValueChange={setStep}>
               <SelectTrigger className="w-full rounded-lg">
                 <SelectValue placeholder="전체" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="max-h-[300px] overflow-y-auto rounded-lg">
                 <SelectItem value="all">전체</SelectItem>
-                {initialRegions.map((reg) => (
-                  <SelectItem key={reg.id} value={reg.id}>
-                    {reg.name}
-                  </SelectItem>
-                ))}
+                <SelectItem value="1">1단계</SelectItem>
+                <SelectItem value="2">2단계</SelectItem>
+                <SelectItem value="3">3단계</SelectItem>
+                <SelectItem value="4">4단계</SelectItem>
               </SelectContent>
             </Select>
           </div>
-          <div>
-            <Label htmlFor="island">섬별 보기</Label>
-            <Select
-              value={island}
-              onValueChange={setIsland}
-              disabled={region === "all" || isFetchingIslands}
-            >
-              <SelectTrigger className="w-full rounded-lg">
-                <SelectValue
-                  placeholder={isFetchingIslands ? "불러오는 중..." : "전체"}
-                />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">전체</SelectItem>
-                {fetchedIslands.map((isl) => (
-                  <SelectItem key={isl.id} value={isl.id}>
-                    {isl.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+        )}
+
+        {role === Role.SUPERADMIN && (
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <Label htmlFor="region">권역 선택</Label>
+              <Select value={region} onValueChange={setRegion}>
+                <SelectTrigger className="w-full rounded-lg">
+                  <SelectValue placeholder="전체" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">전체</SelectItem>
+                  {initialRegions.map((reg) => (
+                    <SelectItem key={reg.id} value={reg.id}>
+                      {reg.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label htmlFor="island">섬별 보기</Label>
+              <Select
+                value={island}
+                onValueChange={setIsland}
+                disabled={region === "all" || isFetchingIslands}
+              >
+                <SelectTrigger className="w-full rounded-lg">
+                  <SelectValue
+                    placeholder={isFetchingIslands ? "불러오는 중..." : "전체"}
+                  />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">전체</SelectItem>
+                  {fetchedIslands.map((isl) => (
+                    <SelectItem key={isl.id} value={isl.id}>
+                      {isl.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
-        </div>
+        )}
         <div className="flex flex-col gap-2">
           <Label htmlFor="date-range">기간별 보기</Label>
           <Popover modal={true}>

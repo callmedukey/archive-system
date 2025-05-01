@@ -622,7 +622,7 @@ export function SimpleEditor({
 
       <div
         className={cn(
-          "p-4 border rounded-lg mt-6 shadow-md max-w-full",
+          "border rounded-lg mt-6 shadow-md max-w-full",
           applyA4 && "max-w-[820px] mx-auto"
         )}
       >

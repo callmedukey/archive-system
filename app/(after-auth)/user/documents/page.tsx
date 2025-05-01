@@ -7,6 +7,8 @@ import DocumentWrapper from "@/components/shared/admin/server/document-wrapper";
 import RegionsWrapper from "@/components/shared/admin/server/regions-wrapper";
 import { Skeleton } from "@/components/ui/skeleton";
 
+import NewDocumentButton from "./components/new-document-button";
+
 export interface DocumentPageProps {
   searchParams: Promise<{
     searchTerm?: string;
@@ -104,6 +106,7 @@ const page = async ({ searchParams }: DocumentPageProps) => {
           )}
         </RegionsWrapper>
       </Suspense>
+      <NewDocumentButton />
     </div>
   );
 };

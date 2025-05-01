@@ -33,6 +33,8 @@ export const documentFormats = pgTable("document_formats", {
     .notNull(),
 });
 
+export type DocumentFormat = typeof documentFormats.$inferSelect;
+
 export const documentFormatsRelations = relations(
   documentFormats,
   ({ many }) => ({
@@ -156,8 +158,8 @@ export const documents = pgTable("documents", {
   level: integer("level").notNull(),
   status: documentStatuses("status").default(DocumentStatus.SUBMITTED),
 
-  typeName: text("type_name").notNull(),
-  typeContent: text("type_content").notNull(),
+  typeName: text("type_name"),
+  typeContent: text("type_content"),
 
   approvedDate: timestamp("approved_date", { mode: "date" }),
   editRequestDate: timestamp("edit_request_date", { mode: "date" }),
@@ -165,7 +167,7 @@ export const documents = pgTable("documents", {
 
   activityPeriodStart: timestamp("activity_period_start", { mode: "date" }),
   activityPeriodEnd: timestamp("activity_period_end", { mode: "date" }),
-  activityLocation: text("activity_location").notNull(),
+  activityLocation: text("activity_location"),
   innerActivityParticipantsNumber: integer(
     "inner_activity_participants_number"
   ),
@@ -185,6 +187,48 @@ export const documents = pgTable("documents", {
     .defaultNow()
     .$onUpdate(() => new Date()),
 });
+
+export const NewDocumentSchema = createInsertSchema(documents)
+  .pick({
+    name: true,
+    islandName: true,
+    regionName: true,
+    level: true,
+    reportDate: true,
+    reporter: true,
+    contractPeriodStart: true,
+    contractPeriodEnd: true,
+    reportingCompany: true,
+    typeName: true,
+    typeContent: true,
+    activityPeriodStart: true,
+    activityPeriodEnd: true,
+    activityLocation: true,
+    innerActivityParticipantsNumber: true,
+    outerActivityParticipantsNumber: true,
+  })
+  .extend({
+    name: z.string().min(1, { message: "이름을 입력해주세요." }),
+    islandName: z.string().min(1, { message: "대상 섬을 입력해주세요." }),
+    regionName: z.string().min(1, { message: "권역명을 입력해주세요." }),
+    level: z.number().min(1, { message: "사업 단계를 입력해주세요." }),
+    reportDate: z.date(),
+    reporter: z.string().min(1, { message: "보고자를 입력해주세요." }),
+    contractPeriodStart: z.date(),
+    contractPeriodEnd: z.date(),
+    reportingCompany: z
+      .string()
+      .min(1, { message: "보고기관을 입력해주세요." }),
+    typeName: z.string().optional(),
+    typeContent: z.string().optional(),
+    activityPeriodStart: z.date().optional(),
+    activityPeriodEnd: z.date().optional(),
+    activityLocation: z.string().optional(),
+    innerActivityParticipantsNumber: z.number().optional(),
+    outerActivityParticipantsNumber: z.number().optional(),
+  });
+
+export type NewDocumentType = z.infer<typeof NewDocumentSchema>;
 
 export const documentsRelations = relations(documents, ({ one, many }) => ({
   user: one(users, {

@@ -1,11 +1,13 @@
 "use client";
 
 import { format } from "date-fns";
+import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useState, useTransition, useCallback, useMemo } from "react";
 
 import type { DocumentWithUser } from "@/components/shared/admin/server/document-wrapper";
-import { documentFormats, Region } from "@/db/schemas";
+import { documentFormats, Region, Role } from "@/db/schemas";
+import renderBaseRolePathname from "@/lib/utils/parse/render-role-pathname";
 
 import { Skeleton } from "../../ui/skeleton";
 import {
@@ -30,6 +32,7 @@ interface DocumentsTableProps {
   initialSearchTerm?: string;
   initialDocumentFormats: (typeof documentFormats.$inferSelect)[];
   initialRegions: Region[];
+  role: Role;
 }
 
 const DocumentsTable = ({
@@ -41,6 +44,7 @@ const DocumentsTable = ({
   initialSearchTerm = "",
   initialDocumentFormats,
   initialRegions,
+  role,
 }: DocumentsTableProps) => {
   const router = useRouter();
   const pathname = usePathname();
@@ -177,6 +181,7 @@ const DocumentsTable = ({
           />
         </div>
         <DocumentsAdvancedFilter
+          role={role}
           initialDocumentFormats={initialDocumentFormats}
           initialRegions={initialRegions}
         />
@@ -187,28 +192,49 @@ const DocumentsTable = ({
         <Table className="**:text-center">
           <TableHeader className="bg-primary-foreground">
             <TableRow>
-              <TableHead>문서명</TableHead>
-              <TableHead>섬</TableHead>
-              <TableHead>지역</TableHead>
-              <TableHead>보고자</TableHead>
-              <TableHead>작성일</TableHead>
+              <TableHead>권역</TableHead>
               <TableHead>작성자</TableHead>
+              <TableHead>제출자료명</TableHead>
+              <TableHead>등록일자</TableHead>
+              <TableHead>보완요청</TableHead>
+              <TableHead>승인완료</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody className="*:not-last:border-b">
             {!isPending &&
               initialDocuments.map((doc) => (
                 <TableRow key={doc.id}>
-                  <TableCell className="font-medium">{doc.name}</TableCell>
+                  <TableCell className="font-medium">
+                    {doc.regionName ?? "-"}
+                  </TableCell>
                   <TableCell>{doc.islandName ?? "-"}</TableCell>
-                  <TableCell>{doc.regionName ?? "-"}</TableCell>
-                  <TableCell>{doc.reporter ?? "-"}</TableCell>
+                  <TableCell>
+                    {doc.name && (
+                      <Link
+                        href={`/${renderBaseRolePathname(role)}/documents/${
+                          doc.id
+                        }`}
+                        className="hover:underline"
+                      >
+                        {doc.name}
+                      </Link>
+                    )}
+                  </TableCell>
                   <TableCell>
                     {doc.createdAt
                       ? format(new Date(doc.createdAt), "yyyy-MM-dd")
                       : "-"}
                   </TableCell>
-                  <TableCell>{doc.user?.username ?? "-"}</TableCell>
+                  <TableCell>
+                    {doc.editRequestDate
+                      ? format(new Date(doc.editRequestDate), "yyyy-MM-dd")
+                      : "-"}
+                  </TableCell>
+                  <TableCell>
+                    {doc.approvedDate
+                      ? format(new Date(doc.approvedDate), "yyyy-MM-dd")
+                      : "-"}
+                  </TableCell>
                 </TableRow>
               ))}
             {initialDocuments.length === 0 && !isPending && (
