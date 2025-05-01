@@ -12,6 +12,7 @@ import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 
 import { deleteFiles } from "@/app/(after-auth)/super-admin/actions/delete-files";
+import { submitEditDocument } from "@/app/(after-auth)/user/documents/[documentId]/edit/actions/submit-edit-document";
 import ButtonWithLoading from "@/components/shared/button-with-loading";
 import DownloadButton from "@/components/shared/download-button";
 import { SimpleEditor } from "@/components/tiptap-templates/simple/simple-editor";
@@ -51,8 +52,8 @@ import { getFileKeyFromUrl } from "@/lib/image-url";
 import { cn } from "@/lib/utils";
 import { UploadButton } from "@/lib/utils/uploadthing";
 
-import { createNewVersionDocument } from "../../../[documentId]/new-version/actions/create-new-version";
-import { createDocument } from "../actions/create-document";
+import { createNewVersionDocument } from "../../app/(after-auth)/user/documents/[documentId]/new-version/actions/create-new-version";
+import { createDocument } from "../../app/(after-auth)/user/documents/new/[formatId]/actions/create-document";
 
 interface NewDocumentFormProps {
   format: DocumentFormat;
@@ -72,8 +73,16 @@ interface NewDocumentFormProps {
   documentName?: string;
   reportMonth?: string;
   previousFormatId?: string;
-  activityTypes: ActivityType[];
-  activityContents: ActivityContent[];
+  activityTypes?: ActivityType[];
+  activityContents?: ActivityContent[];
+  existingTypeName?: string;
+  existingTypeContent?: string;
+  existingActivityPeriodStart?: string;
+  existingActivityPeriodEnd?: string;
+  existingActivityLocation?: string;
+  existingInnerActivityParticipantsNumber?: number;
+  existingOuterActivityParticipantsNumber?: number;
+  isEdit?: boolean;
 }
 
 const NewDocumentForm = ({
@@ -96,9 +105,17 @@ const NewDocumentForm = ({
   previousFormatId,
   activityTypes,
   activityContents,
+  existingTypeName,
+  existingTypeContent,
+  existingActivityPeriodStart,
+  existingActivityPeriodEnd,
+  existingActivityLocation,
+  existingInnerActivityParticipantsNumber,
+  existingOuterActivityParticipantsNumber,
+  isEdit = false,
 }: NewDocumentFormProps) => {
   const [isPending, startTransition] = useTransition();
-  const { formatId } = useParams();
+  const { formatId, documentId } = useParams();
   const form = useForm({
     defaultValues: {
       islandName: username,
@@ -110,11 +127,15 @@ const NewDocumentForm = ({
       reportDate: formatDate(reportDate, "yyyy-MM-dd"),
       reporter: reporter || "",
       reportingCompany: company,
-      activityClassification: "",
-      activityDetails: "",
-      activityLocation: "",
-      islandParticipants: 0,
-      externalParticipants: 0,
+      activityClassification:
+        activityTypes?.find((type) => type.name === existingTypeName)?.id || "",
+      activityDetails:
+        activityContents?.find(
+          (content) => content.name === existingTypeContent
+        )?.id || "",
+      activityLocation: existingActivityLocation || "",
+      islandParticipants: existingInnerActivityParticipantsNumber || 0,
+      externalParticipants: existingOuterActivityParticipantsNumber || 0,
     },
   });
   const router = useRouter();
@@ -133,7 +154,14 @@ const NewDocumentForm = ({
   const [isConfirmDialogOpen, setIsConfirmDialogOpen] = useState(false);
   const [activityDateRange, setActivityDateRange] = useState<
     DateRange | undefined
-  >(undefined);
+  >(
+    existingActivityPeriodStart && existingActivityPeriodEnd
+      ? {
+          from: new Date(existingActivityPeriodStart),
+          to: new Date(existingActivityPeriodEnd),
+        }
+      : undefined
+  );
 
   const handleManualSubmit = () => {
     const data = form.getValues();
@@ -221,10 +249,10 @@ const NewDocumentForm = ({
   const confirmSubmit = () => {
     const data = form.getValues();
     startTransition(async () => {
-      const selectedActivityType = activityTypes.find(
+      const selectedActivityType = activityTypes?.find(
         (t) => t.id === data.activityClassification
       );
-      const selectedActivityContent = activityContents.find(
+      const selectedActivityContent = activityContents?.find(
         (c) => c.id === data.activityDetails
       );
 
@@ -263,10 +291,15 @@ const NewDocumentForm = ({
         documentId?: string;
       };
 
-      if (existingContent) {
+      if (existingContent && !isEdit) {
         result = await createNewVersionDocument({
           ...commonPayload,
           previousDocumentName: documentName || "",
+        });
+      } else if (existingContent && isEdit) {
+        result = await submitEditDocument({
+          ...commonPayload,
+          documentId: documentId as string,
         });
       } else {
         result = await createDocument(commonPayload);
@@ -314,11 +347,11 @@ const NewDocumentForm = ({
 
   const selectedActivityTypeId = form.watch("activityClassification");
 
-  const selectedActivityType = activityTypes.find(
+  const selectedActivityType = activityTypes?.find(
     (type) => type.id === selectedActivityTypeId
   );
 
-  const filteredActivityContents = activityContents.filter(
+  const filteredActivityContents = activityContents?.filter(
     (content) => content.activityTypeId === selectedActivityTypeId
   );
 
@@ -326,9 +359,9 @@ const NewDocumentForm = ({
     <Form {...form}>
       <form className="max-w-[793px] mx-auto bg-white p-2 mt-6 shadow-md">
         <h1 className="text-3xl font-bold text-center mb-6 pb-2 border-b-2 border-gray-300">
-          {format.name === "월간보고서" &&
-            version &&
-            `${reportMonth}월 ${format.name} ${version}`}
+          {format.name === "월간보고서" && version
+            ? `${reportMonth}월 ${format.name} ${version}`
+            : documentName}
         </h1>
 
         <div className="grid grid-cols-[auto_2fr_auto_3fr_auto_1fr_auto_2fr] border-collapse border border-gray-400 mb-2 text-sm">
@@ -477,7 +510,7 @@ const NewDocumentForm = ({
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        {activityTypes.map((type) => (
+                        {activityTypes?.map((type) => (
                           <SelectItem key={type.id} value={type.id}>
                             [{type.textCode}] {type.name}
                           </SelectItem>
@@ -506,7 +539,7 @@ const NewDocumentForm = ({
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        {filteredActivityContents.map((content) => {
+                        {filteredActivityContents?.map((content) => {
                           const typeTextCode =
                             selectedActivityType?.textCode || "";
                           return (
@@ -781,7 +814,7 @@ const NewDocumentForm = ({
             isLoading={isPending}
             disabled={isPending || uploadingImage || uploadingFile}
           >
-            제출
+            {isEdit ? "수정" : "제출"}
           </ButtonWithLoading>
         </div>
       </form>

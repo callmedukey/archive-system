@@ -3,7 +3,12 @@ import { notFound, redirect } from "next/navigation";
 
 import { auth } from "@/auth";
 import { db } from "@/db";
-import { DocumentFormat, documents } from "@/db/schemas";
+import {
+  ActivityContent,
+  ActivityType,
+  DocumentFormat,
+  documents,
+} from "@/db/schemas";
 import getNextVersionNumber from "@/lib/utils/parse/get-next-version-number";
 
 import NewDocumentForm from "../../../../../../components/shared/new-document-form";
@@ -26,6 +31,7 @@ const page = async ({ params }: PageProps) => {
         columns: {
           id: true,
           name: true,
+          applyActivity: true,
         },
       },
       images: true,
@@ -37,13 +43,30 @@ const page = async ({ params }: PageProps) => {
       },
     },
   });
+
   if (!document) {
     return notFound();
   }
+
+  let activityTypes: ActivityType[] = [];
+  let activityContents: ActivityContent[] = [];
+
+  if (document?.format?.applyActivity) {
+    const [foundActivityTypes, foundActivityContents] = await Promise.all([
+      db.query.documentActivityTypes.findMany(),
+      db.query.documentActivityContents.findMany(),
+    ]);
+
+    activityTypes = foundActivityTypes;
+    activityContents = foundActivityContents;
+  }
+
   return (
     <NewDocumentForm
       userId={session.user.id}
-      reportDate={new Date().toISOString()}
+      reportDate={
+        document.reportDate?.toISOString() || new Date().toISOString() || ""
+      }
       format={document.format as DocumentFormat}
       regionName={document.regionName}
       username={document.user?.username || ""}
@@ -57,6 +80,26 @@ const page = async ({ params }: PageProps) => {
       documentName={document.name}
       reportMonth={document.reportMonth?.toString() || ""}
       previousFormatId={document.formatId as string}
+      activityTypes={activityTypes}
+      activityContents={activityContents}
+      existingImages={document.images}
+      existingFiles={document.files}
+      existingActivityPeriodStart={
+        document.activityPeriodStart?.toISOString() || ""
+      }
+      existingActivityPeriodEnd={
+        document.activityPeriodEnd?.toISOString() || ""
+      }
+      existingActivityLocation={document.activityLocation || ""}
+      existingInnerActivityParticipantsNumber={
+        document.innerActivityParticipantsNumber || 0
+      }
+      existingOuterActivityParticipantsNumber={
+        document.outerActivityParticipantsNumber || 0
+      }
+      existingTypeName={document.typeName || ""}
+      existingTypeContent={document.typeContent || ""}
+      isEdit
     />
   );
 };

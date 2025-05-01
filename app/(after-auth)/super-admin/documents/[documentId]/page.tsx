@@ -94,7 +94,6 @@ const page = async ({ params }: PageProps) => {
     return notFound();
   }
 
-  // Prepare data for display grid
   const contractPeriod =
     document.contractPeriodStart && document.contractPeriodEnd
       ? `${format(document.contractPeriodStart, "yyyy-MM-dd")} ~ ${format(
@@ -103,7 +102,6 @@ const page = async ({ params }: PageProps) => {
         )}`
       : "N/A";
 
-  // Prepare activity period for display
   const activityPeriod =
     document.activityPeriodStart && document.activityPeriodEnd
       ? `${format(document.activityPeriodStart, "yyyy-MM-dd")} ~ ${format(

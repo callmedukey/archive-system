@@ -5,7 +5,7 @@ export default function renderNotificationLink({
   role,
   id,
 }: {
-  type: "notice" | "inquiries";
+  type: "notice" | "inquiries" | "documents";
   role: Role;
   id: number;
 }) {

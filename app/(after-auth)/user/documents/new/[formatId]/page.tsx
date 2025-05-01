@@ -11,7 +11,7 @@ import {
   users,
 } from "@/db/schemas";
 
-import NewDocumentForm from "./components/new-document-form";
+import NewDocumentForm from "../../../../../../components/shared/new-document-form";
 
 interface PageProps {
   params: Promise<{ formatId: string }>;

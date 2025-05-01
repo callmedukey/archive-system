@@ -50,14 +50,21 @@ const NotificationCard = async ({ notification }: NotificationCardProps) => {
             notificationId={notification.id}
             isRead={notification.isRead}
           />
-          {(notification.noticeId || notification.inquiryId) && (
+          {(notification.noticeId ||
+            notification.inquiryId ||
+            notification.documentId) && (
             <Button asChild variant="default" size="sm" className="rounded-lg">
               <Link
                 href={renderNotificationLink({
-                  type: notification.noticeId ? "notice" : "inquiries",
+                  type: notification.noticeId
+                    ? "notice"
+                    : notification.inquiryId
+                    ? "inquiries"
+                    : "documents",
                   role: session.user.role,
                   id: (notification.noticeId ??
-                    notification.inquiryId) as number,
+                    notification.inquiryId ??
+                    notification.documentId) as number,
                 })}
               >
                 <ExternalLink className="mr-auto h-4 w-4" />

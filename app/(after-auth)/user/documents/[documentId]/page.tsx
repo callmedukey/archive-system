@@ -1,6 +1,7 @@
 import { format } from "date-fns";
 import { eq } from "drizzle-orm";
 import DOMPurify from "isomorphic-dompurify";
+import { CircleUserRound } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
@@ -19,6 +20,7 @@ import {
 } from "@/db/schemas";
 import getNextVersionNumber from "@/lib/utils/parse/get-next-version-number";
 import renderBaseRolePathname from "@/lib/utils/parse/render-role-pathname";
+
 interface PageProps {
   params: Promise<{ documentId: string }>;
 }
@@ -56,6 +58,7 @@ const page = async ({ params }: PageProps) => {
       activityLocation: true,
       innerActivityParticipantsNumber: true,
       outerActivityParticipantsNumber: true,
+      editRequestReason: true,
     },
     with: {
       user: {
@@ -77,6 +80,13 @@ const page = async ({ params }: PageProps) => {
           },
         },
         orderBy: (comments, { asc }) => [asc(comments.createdAt)],
+      },
+      editRequestAuthor: {
+        columns: {
+          id: true,
+          username: true,
+          role: true,
+        },
       },
     },
   });
@@ -133,7 +143,41 @@ const page = async ({ params }: PageProps) => {
               </Link>
             </Button>
           )}
+        {document.status === DocumentStatus.EDIT_REQUESTED && (
+          <Button
+            className="text-white px-4 py-2 rounded text-sm font-medium print:hidden"
+            asChild
+          >
+            <Link
+              href={`/${renderBaseRolePathname(session.user.role)}/documents/${
+                document.id
+              }/edit`}
+            >
+              수정하기
+            </Link>
+          </Button>
+        )}
       </div>
+
+      {document.status === DocumentStatus.EDIT_REQUESTED &&
+        document.editRequestReason && (
+          <div className="my-4 p-4 border rounded bg-yellow-50 text-yellow-800 space-y-2">
+            <h2 className="text-lg font-semibold mb-2 text-yellow-900">
+              보완 요청 사항
+            </h2>
+            <div className="flex items-center text-sm font-medium space-x-2">
+              <CircleUserRound className="w-5 h-5 text-yellow-700" />
+              <span>
+                {document.editRequestAuthor?.role === Role.SUPERADMIN
+                  ? "총괄관리자"
+                  : document.editRequestAuthor?.role === Role.ADMIN
+                  ? "관리자"
+                  : "요청자 정보 없음"}
+              </span>
+            </div>
+            <p className="text-sm">{document.editRequestReason}</p>
+          </div>
+        )}
 
       {/* Display Grid Copied from NewDocumentForm */}
       <div className="grid grid-cols-[auto_2fr_auto_3fr_auto_1fr_auto_2fr] border-collapse border border-gray-200 text-sm">
@@ -185,7 +229,6 @@ const page = async ({ params }: PageProps) => {
         </div>
       </div>
 
-      {/* Activity Section (Conditionally Rendered) */}
       {document.typeName && (
         <>
           <h2 className="text-lg font-semibold text-center my-2 pb-2 border-b border-gray-300">

@@ -124,7 +124,7 @@ const DocumentStatusControl = ({
   };
 
   return (
-    <Card>
+    <Card className="print:hidden">
       <CardHeader>
         <CardTitle className="text-lg">문서 상태 관리</CardTitle>
       </CardHeader>
