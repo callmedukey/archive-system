@@ -49,6 +49,13 @@ const page = async ({ params }: PageProps) => {
       userId: true,
       formatId: true,
       status: true,
+      typeName: true,
+      typeContent: true,
+      activityPeriodStart: true,
+      activityPeriodEnd: true,
+      activityLocation: true,
+      innerActivityParticipantsNumber: true,
+      outerActivityParticipantsNumber: true,
     },
     with: {
       user: {
@@ -87,6 +94,15 @@ const page = async ({ params }: PageProps) => {
         )}`
       : "N/A";
 
+  // Prepare activity period for display
+  const activityPeriod =
+    document.activityPeriodStart && document.activityPeriodEnd
+      ? `${format(document.activityPeriodStart, "yyyy-MM-dd")} ~ ${format(
+          document.activityPeriodEnd,
+          "yyyy-MM-dd"
+        )}`
+      : "N/A";
+
   return (
     <div className="max-w-[793px] mx-auto p-2 bg-white my-6 rounded-md **:print:text-[12px]">
       {/* Header */}
@@ -102,20 +118,21 @@ const page = async ({ params }: PageProps) => {
             )}
           </p>
         </div>
-        {document.status !== DocumentStatus.APPROVED && (
-          <Button
-            className="text-white px-4 py-2 rounded text-sm font-medium print:hidden"
-            asChild
-          >
-            <Link
-              href={`/${renderBaseRolePathname(session.user.role)}/documents/${
-                document.id
-              }/new-version`}
+        {document.status === DocumentStatus.APPROVED &&
+          document.name.includes("월간보고서") && (
+            <Button
+              className="text-white px-4 py-2 rounded text-sm font-medium print:hidden"
+              asChild
             >
-              V{getNextVersionNumber(document.name)} 등록하기
-            </Link>
-          </Button>
-        )}
+              <Link
+                href={`/${renderBaseRolePathname(
+                  session.user.role
+                )}/documents/${document.id}/new-version`}
+              >
+                V{getNextVersionNumber(document.name)} 등록하기
+              </Link>
+            </Button>
+          )}
       </div>
 
       {/* Display Grid Copied from NewDocumentForm */}
@@ -167,6 +184,55 @@ const page = async ({ params }: PageProps) => {
           {document.reporter ?? "N/A"}
         </div>
       </div>
+
+      {/* Activity Section (Conditionally Rendered) */}
+      {document.typeName && (
+        <>
+          <h2 className="text-lg font-semibold text-center my-2 pb-2 border-b border-gray-300">
+            사업추진현황
+          </h2>
+          <div className="grid grid-cols-[auto_1fr_auto_1fr] border-collapse border border-gray-200 mb-6 text-sm">
+            <div className="font-semibold bg-gray-100 p-2 border border-gray-200 text-center flex items-center justify-center">
+              활동 분류
+            </div>
+            <div className="p-2 border border-gray-200 flex items-center">
+              {document.typeName ?? "N/A"}
+            </div>
+            <div className="font-semibold bg-gray-100 p-2 border border-gray-200 text-center flex items-center justify-center">
+              활동 내용
+            </div>
+            <div className="p-2 border border-gray-200 flex items-center">
+              {document.typeContent ?? "N/A"}
+            </div>
+
+            <div className="font-semibold bg-gray-100 p-2 border border-gray-200 text-center flex items-center justify-center">
+              활동 기간
+            </div>
+            <div className="p-2 border border-gray-200 flex items-center">
+              {activityPeriod}
+            </div>
+            <div className="font-semibold bg-gray-100 p-2 border border-gray-200 text-center flex items-center justify-center">
+              활동 장소
+            </div>
+            <div className="p-2 border border-gray-200 flex items-center">
+              {document.activityLocation ?? "N/A"}
+            </div>
+
+            <div className="font-semibold bg-gray-100 p-2 border border-gray-200 text-center flex items-center justify-center">
+              섬지역 참여인원
+            </div>
+            <div className="p-2 border border-gray-200 flex items-center">
+              {document.innerActivityParticipantsNumber ?? "N/A"}
+            </div>
+            <div className="font-semibold bg-gray-100 p-2 border border-gray-200 text-center flex items-center justify-center">
+              외부 참여인원
+            </div>
+            <div className="p-2 border border-gray-200 flex items-center">
+              {document.outerActivityParticipantsNumber ?? "N/A"}
+            </div>
+          </div>
+        </>
+      )}
 
       {/* Data Section (Content) */}
       {document.content ? (

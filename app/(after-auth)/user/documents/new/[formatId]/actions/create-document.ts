@@ -15,6 +15,7 @@ import {
   Role,
   usersToRegions,
 } from "@/db/schemas";
+import renderFirstDocumentName from "@/lib/utils/parse/render-first-document-name";
 
 export type CreateDocumentProps = NewDocumentType & {
   userId: string;
@@ -72,7 +73,10 @@ export const createDocument = async ({
         formatId,
         reportMonth,
         reportYear,
-        name: `${reportMonth}월 ${data.name} V1`,
+        name: renderFirstDocumentName({
+          reportMonth,
+          name: data.name,
+        }),
         content,
       })
       .returning({ id: documents.id });
@@ -114,7 +118,12 @@ export const createDocument = async ({
       userId: user.id,
       documentId: document.id,
       title: "새로운 문서가 생성되었습니다.",
-      content: `등록자 ${session.user.username}에 의해 ${reportMonth}월 ${data.name} 문서가 생성되었습니다.`,
+      content: `등록자 ${
+        session.user.username
+      }에 의해 ${renderFirstDocumentName({
+        reportMonth,
+        name: data.name,
+      })} 문서가 생성되었습니다.`,
     }));
 
     if (notificationData.length > 0) {

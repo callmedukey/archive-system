@@ -4,7 +4,12 @@ import React from "react";
 
 import { auth } from "@/auth";
 import { db } from "@/db";
-import { documentFormats, users } from "@/db/schemas";
+import {
+  ActivityContent,
+  ActivityType,
+  documentFormats,
+  users,
+} from "@/db/schemas";
 
 import NewDocumentForm from "./components/new-document-form";
 
@@ -24,6 +29,19 @@ const page = async ({ params }: PageProps) => {
   const format = await db.query.documentFormats.findFirst({
     where: eq(documentFormats.id, formatId),
   });
+
+  let activityTypes: ActivityType[] = [];
+  let activityContents: ActivityContent[] = [];
+
+  if (format?.applyActivity) {
+    const [foundActivityTypes, foundActivityContents] = await Promise.all([
+      db.query.documentActivityTypes.findMany(),
+      db.query.documentActivityContents.findMany(),
+    ]);
+
+    activityTypes = foundActivityTypes;
+    activityContents = foundActivityContents;
+  }
 
   const userWithRegion = await db.query.users.findFirst({
     where: eq(users.id, session.user.id),
@@ -72,6 +90,8 @@ const page = async ({ params }: PageProps) => {
           userWithRegion?.contractPeriodEnd?.toISOString() || ""
         }
         company={userWithRegion?.company || ""}
+        activityTypes={activityTypes}
+        activityContents={activityContents}
       />
     </div>
   );

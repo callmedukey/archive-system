@@ -1,11 +1,13 @@
 "use client";
 
 import { format as formatDate } from "date-fns";
-import { Upload } from "lucide-react";
+import { ko } from "date-fns/locale";
+import { CalendarIcon, Upload } from "lucide-react";
 import Image from "next/image";
 import { useParams, useRouter } from "next/navigation";
 import { useState } from "react";
 import React, { useTransition } from "react";
+import { DateRange } from "react-day-picker";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 
@@ -14,6 +16,7 @@ import ButtonWithLoading from "@/components/shared/button-with-loading";
 import DownloadButton from "@/components/shared/download-button";
 import { SimpleEditor } from "@/components/tiptap-templates/simple/simple-editor";
 import { Button } from "@/components/ui/button";
+import { Calendar } from "@/components/ui/calendar";
 import {
   Dialog,
   DialogContent,
@@ -30,12 +33,26 @@ import {
   FormLabel,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
-import { DocumentFormat } from "@/db/schemas";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { ActivityContent, ActivityType, DocumentFormat } from "@/db/schemas";
 import { getFileKeyFromUrl } from "@/lib/image-url";
+import { cn } from "@/lib/utils";
 import { UploadButton } from "@/lib/utils/uploadthing";
 
 import { createNewVersionDocument } from "../../../[documentId]/new-version/actions/create-new-version";
+import { createDocument } from "../actions/create-document";
 
 interface NewDocumentFormProps {
   format: DocumentFormat;
@@ -55,6 +72,8 @@ interface NewDocumentFormProps {
   documentName?: string;
   reportMonth?: string;
   previousFormatId?: string;
+  activityTypes: ActivityType[];
+  activityContents: ActivityContent[];
 }
 
 const NewDocumentForm = ({
@@ -75,6 +94,8 @@ const NewDocumentForm = ({
   documentName,
   reportMonth,
   previousFormatId,
+  activityTypes,
+  activityContents,
 }: NewDocumentFormProps) => {
   const [isPending, startTransition] = useTransition();
   const { formatId } = useParams();
@@ -89,6 +110,11 @@ const NewDocumentForm = ({
       reportDate: formatDate(reportDate, "yyyy-MM-dd"),
       reporter: reporter || "",
       reportingCompany: company,
+      activityClassification: "",
+      activityDetails: "",
+      activityLocation: "",
+      islandParticipants: 0,
+      externalParticipants: 0,
     },
   });
   const router = useRouter();
@@ -105,6 +131,9 @@ const NewDocumentForm = ({
   const [uploadingImage, setUploadingImage] = useState(false);
   const [uploadingFile, setUploadingFile] = useState(false);
   const [isConfirmDialogOpen, setIsConfirmDialogOpen] = useState(false);
+  const [activityDateRange, setActivityDateRange] = useState<
+    DateRange | undefined
+  >(undefined);
 
   const handleManualSubmit = () => {
     const data = form.getValues();
@@ -149,13 +178,57 @@ const NewDocumentForm = ({
       return;
     }
 
+    if (format.applyActivity) {
+      if (!data.activityClassification) {
+        toast.error("활동 분류를 선택해주세요.");
+        return;
+      }
+      if (!data.activityDetails) {
+        toast.error("활동 내용을 선택해주세요.");
+        return;
+      }
+      if (!activityDateRange?.from || !activityDateRange?.to) {
+        toast.error("활동 기간을 선택해주세요.");
+        return;
+      }
+      if (activityDateRange.from > activityDateRange.to) {
+        toast.error("활동 시작일이 종료일보다 빠를 수 없습니다.");
+        return;
+      }
+      if (!data.activityLocation) {
+        toast.error("활동 장소를 입력해주세요.");
+        return;
+      }
+      if (
+        data.islandParticipants === undefined ||
+        data.islandParticipants < 0
+      ) {
+        toast.error("섬지역 참여인원을 올바르게 입력해주세요.");
+        return;
+      }
+      if (
+        data.externalParticipants === undefined ||
+        data.externalParticipants < 0
+      ) {
+        toast.error("외부 참여인원을 올바르게 입력해주세요.");
+        return;
+      }
+    }
+
     setIsConfirmDialogOpen(true);
   };
 
   const confirmSubmit = () => {
     const data = form.getValues();
     startTransition(async () => {
-      const { success, message, documentId } = await createNewVersionDocument({
+      const selectedActivityType = activityTypes.find(
+        (t) => t.id === data.activityClassification
+      );
+      const selectedActivityContent = activityContents.find(
+        (c) => c.id === data.activityDetails
+      );
+
+      const commonPayload = {
         userId,
         formatId: previousFormatId || (formatId as string),
         name: format.name,
@@ -173,14 +246,37 @@ const NewDocumentForm = ({
         islandName: data.islandName,
         regionName: data.regionName,
         content: content,
-        previousDocumentName: documentName || "",
-      });
+        ...(format.applyActivity && {
+          typeName: selectedActivityType?.name,
+          activityPeriodStart: activityDateRange?.from,
+          activityPeriodEnd: activityDateRange?.to,
+          typeContent: selectedActivityContent?.name,
+          activityLocation: data.activityLocation,
+          innerActivityParticipantsNumber: data.islandParticipants,
+          outerActivityParticipantsNumber: data.externalParticipants,
+        }),
+      };
+
+      let result: {
+        success: boolean;
+        message?: string;
+        documentId?: string;
+      };
+
+      if (existingContent) {
+        result = await createNewVersionDocument({
+          ...commonPayload,
+          previousDocumentName: documentName || "",
+        });
+      } else {
+        result = await createDocument(commonPayload);
+      }
 
       setIsConfirmDialogOpen(false);
-      if (success) {
-        router.push(`/user/documents/${documentId}`);
+      if (result.success && result.documentId) {
+        router.push(`/user/documents/${result.documentId}`);
       } else {
-        toast.error(message);
+        toast.error(result.message || "문서 처리 중 오류가 발생했습니다.");
       }
     });
   };
@@ -216,6 +312,16 @@ const NewDocumentForm = ({
     "yyyy-MM-dd"
   )} ~ ${formatDate(contractPeriodEnd, "yyyy-MM-dd")}`;
 
+  const selectedActivityTypeId = form.watch("activityClassification");
+
+  const selectedActivityType = activityTypes.find(
+    (type) => type.id === selectedActivityTypeId
+  );
+
+  const filteredActivityContents = activityContents.filter(
+    (content) => content.activityTypeId === selectedActivityTypeId
+  );
+
   return (
     <Form {...form}>
       <form className="max-w-[793px] mx-auto bg-white p-2 mt-6 shadow-md">
@@ -225,7 +331,7 @@ const NewDocumentForm = ({
             `${reportMonth}월 ${format.name} ${version}`}
         </h1>
 
-        <div className="grid grid-cols-[auto_2fr_auto_3fr_auto_1fr_auto_2fr] border-collapse border border-gray-400 mb-6 text-sm">
+        <div className="grid grid-cols-[auto_2fr_auto_3fr_auto_1fr_auto_2fr] border-collapse border border-gray-400 mb-2 text-sm">
           <FormLabel className="font-semibold bg-gray-100 p-2 border border-gray-400 text-center flex items-center justify-center">
             권역명
           </FormLabel>
@@ -341,6 +447,186 @@ const NewDocumentForm = ({
             )}
           />
         </div>
+        {format.applyActivity && (
+          <>
+            <h2 className="text-xl font-semibold text-center pb-2 border-b border-gray-300">
+              사업추진현황
+            </h2>
+            <div className="grid grid-cols-[auto_1fr_auto_1fr] border-collapse border border-gray-400 mb-6 text-sm">
+              <FormLabel className="font-semibold bg-gray-100 p-2 border border-gray-400 text-center flex items-center justify-center">
+                활동 분류
+              </FormLabel>
+              <FormField
+                control={form.control}
+                name="activityClassification"
+                render={({ field }) => (
+                  <FormItem className="border border-gray-400 m-0 p-0 flex items-center">
+                    <Select
+                      onValueChange={(value) => {
+                        field.onChange(value);
+                        form.setValue("activityDetails", "", {
+                          shouldValidate: true,
+                        });
+                      }}
+                      value={field.value}
+                      disabled={isPending}
+                    >
+                      <FormControl>
+                        <SelectTrigger className="border-none rounded-none p-2 h-full focus:ring-0 focus:ring-offset-0">
+                          <SelectValue placeholder="분류 선택" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {activityTypes.map((type) => (
+                          <SelectItem key={type.id} value={type.id}>
+                            [{type.textCode}] {type.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </FormItem>
+                )}
+              />
+              <FormLabel className="font-semibold bg-gray-100 p-2 border border-gray-400 text-center flex items-center justify-center">
+                활동 내용
+              </FormLabel>
+              <FormField
+                control={form.control}
+                name="activityDetails"
+                render={({ field }) => (
+                  <FormItem className="border border-gray-400 m-0 p-0 flex items-center">
+                    <Select
+                      onValueChange={field.onChange}
+                      value={field.value}
+                      disabled={isPending || !selectedActivityTypeId}
+                    >
+                      <FormControl>
+                        <SelectTrigger className="border-none rounded-none p-2 h-full focus:ring-0 focus:ring-offset-0 disabled:opacity-100 disabled:cursor-not-allowed">
+                          <SelectValue placeholder="내용 선택" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {filteredActivityContents.map((content) => {
+                          const typeTextCode =
+                            selectedActivityType?.textCode || "";
+                          return (
+                            <SelectItem key={content.id} value={content.id}>
+                              [{typeTextCode}]-{content.numericalCode}{" "}
+                              {content.name}
+                            </SelectItem>
+                          );
+                        })}
+                      </SelectContent>
+                    </Select>
+                  </FormItem>
+                )}
+              />
+
+              <FormLabel className="font-semibold bg-gray-100 p-2 border border-gray-400 text-center flex items-center justify-center">
+                활동 기간
+              </FormLabel>
+              <div className="border border-gray-400 m-0 p-0 flex items-center">
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant={"outline"}
+                      className={cn(
+                        "w-full justify-start text-left font-normal border-none rounded-none p-2 h-full focus-visible:ring-0 focus-visible:ring-offset-0",
+                        !activityDateRange && "text-muted-foreground"
+                      )}
+                      disabled={isPending}
+                    >
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {activityDateRange?.from ? (
+                        activityDateRange.to ? (
+                          <>
+                            {formatDate(activityDateRange.from, "yyyy-MM-dd")} ~{" "}
+                            {formatDate(activityDateRange.to, "yyyy-MM-dd")}
+                          </>
+                        ) : (
+                          formatDate(activityDateRange.from, "yyyy-MM-dd")
+                        )
+                      ) : (
+                        <span>기간 선택</span>
+                      )}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar
+                      locale={ko}
+                      mode="range"
+                      defaultMonth={activityDateRange?.from}
+                      selected={activityDateRange}
+                      onSelect={setActivityDateRange}
+                      numberOfMonths={2}
+                      disabled={isPending}
+                    />
+                  </PopoverContent>
+                </Popover>
+              </div>
+              <FormLabel className="font-semibold bg-gray-100 p-2 border border-gray-400 text-center flex items-center justify-center">
+                활동 장소
+              </FormLabel>
+              <FormField
+                control={form.control}
+                name="activityLocation"
+                render={({ field }) => (
+                  <FormItem className="border border-gray-400 m-0 p-0 flex items-center">
+                    <FormControl>
+                      <Input
+                        {...field}
+                        className="border-none rounded-none p-2 h-full focus-visible:ring-0 focus-visible:ring-offset-0"
+                      />
+                    </FormControl>
+                  </FormItem>
+                )}
+              />
+
+              <FormLabel className="font-semibold bg-gray-100 p-2 border border-gray-400 text-center flex items-center justify-center">
+                섬지역 참여인원
+              </FormLabel>
+              <FormField
+                control={form.control}
+                name="islandParticipants"
+                render={({ field }) => (
+                  <FormItem className="border border-gray-400 m-0 p-0 flex items-center">
+                    <FormControl>
+                      <Input
+                        {...field}
+                        type="number"
+                        onChange={(e) =>
+                          field.onChange(parseInt(e.target.value) || 0)
+                        }
+                        className="border-none rounded-none p-2 h-full focus-visible:ring-0 focus-visible:ring-offset-0"
+                      />
+                    </FormControl>
+                  </FormItem>
+                )}
+              />
+              <FormLabel className="font-semibold bg-gray-100 p-2 border border-gray-400 text-center flex items-center justify-center">
+                외부 참여인원
+              </FormLabel>
+              <FormField
+                control={form.control}
+                name="externalParticipants"
+                render={({ field }) => (
+                  <FormItem className="border border-gray-400 m-0 p-0 flex items-center">
+                    <FormControl>
+                      <Input
+                        {...field}
+                        type="number"
+                        onChange={(e) =>
+                          field.onChange(parseInt(e.target.value) || 0)
+                        }
+                        className="border-none rounded-none p-2 h-full focus-visible:ring-0 focus-visible:ring-offset-0"
+                      />
+                    </FormControl>
+                  </FormItem>
+                )}
+              />
+            </div>
+          </>
+        )}
 
         <SimpleEditor
           content={content}
@@ -348,7 +634,6 @@ const NewDocumentForm = ({
           applyA4={true}
         />
 
-        {/* Image Display Area */}
         {imageUrls.length > 0 && (
           <ScrollArea className="h-fit mt-6 whitespace-nowrap rounded-md border shadow-md p-4">
             <h2 className="text-lg font-medium">업로드된 이미지</h2>
@@ -383,7 +668,6 @@ const NewDocumentForm = ({
           </ScrollArea>
         )}
 
-        {/* File Display Area */}
         {fileUrls.length > 0 && (
           <ScrollArea className="h-fit mt-6 whitespace-nowrap rounded-md border shadow-md p-4">
             <h2 className="text-lg font-medium">업로드된 파일</h2>
@@ -411,7 +695,6 @@ const NewDocumentForm = ({
           </ScrollArea>
         )}
 
-        {/* Upload Buttons */}
         <div className="flex gap-4 mt-6 justify-center">
           <UploadButton
             className="ut-button:bg-gray-500 ut-button:text-white ut-button:font-medium"
