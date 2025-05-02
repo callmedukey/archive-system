@@ -1,6 +1,6 @@
 import { Bell, Home, MessageCircle, BookText, ScrollText } from "lucide-react";
 import { redirect } from "next/navigation";
-import React, { Suspense } from "react";
+import React from "react";
 
 import { auth } from "@/auth";
 import AppSidebar from "@/components/shared/app-sidebar";
@@ -49,9 +49,7 @@ const layout = async ({ children }: { children: React.ReactNode }) => {
 
   return (
     <SidebarProvider>
-      <Suspense fallback={<AppSidebar items={items} />}>
-        <AppSidebar items={items} />
-      </Suspense>
+      <AppSidebar items={items} />
       <main className="w-full px-4">
         <SidebarTrigger className="-ml-1" />
         {children}
