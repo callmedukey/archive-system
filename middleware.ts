@@ -8,6 +8,11 @@ export default async function middleware(req: NextRequest) {
     const token = await getToken({
       req,
       secret: process.env.AUTH_SECRET as string,
+      secureCookie: process.env.NODE_ENV === "production" ? true : false,
+      cookieName:
+        process.env.NODE_ENV === "production"
+          ? "__Secure-authjs.session-token"
+          : "authjs.session-token",
     });
 
     if (token?.role === Role.SUPERADMIN) {
@@ -15,7 +20,3 @@ export default async function middleware(req: NextRequest) {
     }
   }
 }
-
-export const config = {
-  runtime: "nodejs",
-};
