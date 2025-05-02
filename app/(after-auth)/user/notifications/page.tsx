@@ -40,6 +40,11 @@ const page = async () => {
             />
           );
         })}
+        {notifications.length === 0 && (
+          <div className="flex justify-center items-center h-full my-12">
+            <p className="text-muted-foreground">알림이 없습니다.</p>
+          </div>
+        )}
       </div>
     </div>
   );

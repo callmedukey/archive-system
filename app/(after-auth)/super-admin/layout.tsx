@@ -25,7 +25,6 @@ const layout = async ({ children }: { children: React.ReactNode }) => {
   }
 
   const unreadNotificationsCount = await getUnreadNotificationsCount();
-  console.log(unreadNotificationsCount);
   const items = [
     {
       label: `알림 ${
