@@ -67,7 +67,14 @@ const page = async () => {
             )}
             {documentFormats.map((documentFormat) => (
               <TableRow key={documentFormat.id} className="*:py-4">
-                <TableCell>{documentFormat.name}</TableCell>
+                <TableCell>
+                  <Link
+                    href={`/super-admin/manage-documents/${documentFormat.id}`}
+                    className="hover:underline"
+                  >
+                    {documentFormat.name}
+                  </Link>
+                </TableCell>
                 <TableCell>
                   {format(new Date(documentFormat.createdAt), "yyyy-MM-dd")}
                 </TableCell>
