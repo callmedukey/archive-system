@@ -5,6 +5,8 @@ import { db } from "@/db";
 import { AdminSignUpForm } from "./components/admin-sign-up-form";
 import { UserSignUpForm } from "./components/user-sign-up-form";
 
+export const dynamic = "force-dynamic";
+
 export default async function SignUpPage() {
   const regions = await db.query.regions.findMany();
   const regionsOptions = regions.map((region) => ({
