@@ -9,6 +9,8 @@ import {
   TableCell,
 } from "@/components/ui/table";
 import { Region } from "@/db/schemas";
+
+import DeleteRegionButton from "./delete-region-button";
 interface RegionsTableProps {
   regions: Region[];
 }
@@ -19,7 +21,8 @@ const RegionsTable = ({ regions }: RegionsTableProps) => {
       <TableHeader className="bg-primary-foreground">
         <TableRow>
           <TableHead className="">번호</TableHead>
-          <TableHead>권역명</TableHead>
+          <TableHead className="w-full">권역명</TableHead>
+          <TableHead></TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
@@ -27,6 +30,9 @@ const RegionsTable = ({ regions }: RegionsTableProps) => {
           <TableRow key={region.id}>
             <TableCell>{index + 1}</TableCell>
             <TableCell>{region.name}</TableCell>
+            <TableCell>
+              <DeleteRegionButton regionId={region.id} />
+            </TableCell>
           </TableRow>
         ))}
       </TableBody>
