@@ -55,38 +55,45 @@ const AsideUserFilter = ({ regions, userRole }: AsideUserFilterProps) => {
   }
 
   return (
-    <aside className="max-w-md grid grid-cols-2 gap-2">
-      <SelectWithLabel
-        name="role"
-        options={Object.values(Role)
-          .filter((r) => r !== Role.SUPERADMIN)
-          .map((r) => ({
-            label: renderRole(r),
-            value: r,
+    <>
+      <aside className="max-w-md grid grid-cols-2 gap-2">
+        <SelectWithLabel
+          name="role"
+          options={Object.values(Role)
+            .filter((r) => r !== Role.SUPERADMIN)
+            .map((r) => ({
+              label: renderRole(r),
+              value: r,
+            }))}
+          label=""
+          disableLabel
+          className={cn("w-full", isPending && "animate-pulse")}
+          disabled={isPending}
+          placeholder="역할 선택"
+          value={role as string}
+          onChange={handleRoleChange}
+        />
+        <SelectWithLabel
+          name="region"
+          label=""
+          options={regions.map((region) => ({
+            label: region.name,
+            value: region.id,
           }))}
-        label=""
-        disableLabel
-        className={cn("w-full", isPending && "animate-pulse")}
-        disabled={isPending}
-        placeholder="역할 선택"
-        value={role as string}
-        onChange={handleRoleChange}
-      />
-      <SelectWithLabel
-        name="region"
-        label=""
-        options={regions.map((region) => ({
-          label: region.name,
-          value: region.id,
-        }))}
-        disableLabel
-        value={selectedRegion?.id || ""}
-        placeholder="권역 선택"
-        onChange={handleRegionChange}
-        disabled={isPending || !role}
-        className="w-full grow"
-      />
-    </aside>
+          disableLabel
+          value={selectedRegion?.id || ""}
+          placeholder="권역 선택"
+          onChange={handleRegionChange}
+          disabled={isPending || !role}
+          className="w-full grow"
+        />
+      </aside>
+      <div className="mt-6">
+        {!selectedRegion && (
+          <p className="text-sm text-gray-500">권역을 선택해주세요.</p>
+        )}
+      </div>
+    </>
   );
 };
 

@@ -14,8 +14,8 @@ const UsersDataContext = createContext<{
   setUsers: (users: (User & { region: string })[] | User[]) => void;
   isLoading: boolean;
   setIsLoading: (isLoading: boolean) => void;
-  role: Role | null;
-  setRole: (role: Role) => void;
+  role: Role | "all";
+  setRole: (role: Role | "all") => void;
 }>({
   users: [],
   setUsers: () => {},
@@ -32,7 +32,7 @@ const UsersDataContextProvider = ({
   const [users, setUsers] = useState<(User & { region: string })[] | User[]>(
     foundUsers || []
   );
-  const [role, setRole] = useState<Role>(Role.USER);
+  const [role, setRole] = useState<Role | "all">(Role.USER);
   const [isLoading, setIsLoading] = useState(false);
 
   return (

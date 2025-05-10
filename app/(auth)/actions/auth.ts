@@ -6,7 +6,7 @@ import { ZodError } from "zod";
 
 import { signIn } from "@/auth";
 import { db } from "@/db";
-import { Role, users, usersToRegions } from "@/db/schemas";
+import { Role, users, usersToRegions, regions } from "@/db/schemas";
 import { notifications } from "@/db/schemas/notifications";
 import {
   LoginSchema,
@@ -46,7 +46,7 @@ export async function adminSignup(
 
   const { email, password, username, phone, role, region } = result.data;
 
-  const [user, emailUser] = await Promise.all([
+  const [userExists, emailUserExists] = await Promise.all([
     db.query.users.findFirst({
       where: eq(users.username, username),
     }),
@@ -55,12 +55,12 @@ export async function adminSignup(
     }),
   ]);
 
-  if (user) {
+  if (userExists) {
     response.message = "이미 존재하는 아이디입니다.";
     return response;
   }
 
-  if (emailUser) {
+  if (emailUserExists) {
     response.message = "이미 존재하는 이메일입니다.";
     return response;
   }
@@ -68,7 +68,7 @@ export async function adminSignup(
   const hashed = await hashPassword(password, createSalt());
 
   try {
-    const [user] = await db
+    const [newUser] = await db
       .insert(users)
       .values({
         email,
@@ -81,7 +81,7 @@ export async function adminSignup(
       .returning();
 
     await db.insert(usersToRegions).values({
-      userId: user.id,
+      userId: newUser.id,
       regionId: region,
     });
 
@@ -98,13 +98,28 @@ export async function adminSignup(
 
     const recipientIds = recipients
       .map((r) => r.id)
-      .filter((id) => id !== user.id);
+      .filter((id) => id !== newUser.id);
+
+    const regionDetails = await db.query.regions.findFirst({
+      columns: { name: true },
+      where: eq(regions.id, region),
+    });
+
+    if (!regionDetails) {
+      console.error(
+        `Region with ID ${region} not found during admin signup for user ${username}.`
+      );
+      response.message =
+        "선택하신 지역 정보를 찾을 수 없습니다. 다시 시도하거나 관리자에게 문의해주세요.";
+      return response;
+    }
+    const regionName = regionDetails.name;
 
     if (recipientIds.length > 0) {
       await db.insert(notifications).values(
         recipientIds.map((recipientId) => ({
           title: "관리자 계정 승인 요청",
-          content: `새로운 관리자 ${username}님의 계정 승인이 필요합니다.`,
+          content: `새로운 관리자 ${username}님 (${regionName} 지역)의 계정 승인이 필요합니다.`,
           userId: recipientId,
         }))
       );

@@ -114,5 +114,6 @@ export async function getAdminsByRegion(
     ...user,
     region: region.name,
   }));
+
   return foundUsers as (User & { region: string })[];
 }
