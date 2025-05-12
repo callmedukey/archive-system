@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import React, { Suspense } from "react";
 
 import { auth } from "@/auth";
+import ScheduleCalendar from "@/components/schedule-calendar";
 import DashboardInfoTableCard from "@/components/shared/dashboard-info-table-card";
 import DashboardMainClient from "@/components/shared/dashboard-main-client";
 import DashboardMainWrapper from "@/components/shared/dashboard-main-wrapper";
@@ -147,6 +148,7 @@ const page = async () => {
           ]}
         />
       </aside>
+      <ScheduleCalendar />
     </div>
   );
 };
