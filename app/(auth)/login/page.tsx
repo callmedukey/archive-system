@@ -16,8 +16,8 @@ export default function LoginPage() {
       <h1 className="text-center mb-4">로그인</h1>
       <Tabs defaultValue="user">
         <TabsList className="grid w-full grid-cols-2">
-          <TabsTrigger value="user">등록자</TabsTrigger>
-          <TabsTrigger value="admin">관리자</TabsTrigger>
+          <TabsTrigger value="user">PM단</TabsTrigger>
+          <TabsTrigger value="admin">한섬원</TabsTrigger>
         </TabsList>
         <TabsContent value="user">
           <Card>

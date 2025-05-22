@@ -4,7 +4,7 @@ import { CircleUserRound } from "lucide-react";
 import { useActionState, useEffect } from "react";
 import { toast } from "sonner";
 
-import { createComment } from "@/app/(after-auth)/actions/create-comment";
+import { createComment } from "@/app/(after-auth)/actions/crud-comment";
 
 import ButtonWithLoading from "./button-with-loading";
 import { Textarea } from "../ui/textarea";

@@ -41,7 +41,7 @@ const ReadNotificationButton = ({
         disabled={isPending}
         icon={<Check className="mr-auto h-4 w-4" />}
       >
-        <span className="mr-auto ml-0">{isRead ? "안읽음" : "읽음 처리"}</span>
+        <span className="mr-auto ml-0">{isRead ? "읽음" : "읽음 처리"}</span>
       </ButtonWithLoading>
     </form>
   );

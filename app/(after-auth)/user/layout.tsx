@@ -36,7 +36,7 @@ const layout = async ({ children }: { children: React.ReactNode }) => {
       icon: <MessageCircle />,
     },
     {
-      label: "자료 관리",
+      label: "자료 등록",
       href: "/user/documents",
       icon: <BookText />,
     },

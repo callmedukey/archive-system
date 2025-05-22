@@ -40,7 +40,10 @@ export const AdminSignUpSchema = createInsertSchema(users)
       .string({ required_error: "전화번호는 필수 입력 항목입니다." })
       .min(9, "전화번호는 최소 9자 이상이어야 합니다.")
       .regex(phoneRegex, "전화번호 형식이 올바르지 않습니다.")
-      .trim(),
+      .trim()
+      .refine((val) => val.includes("-"), {
+        message: "전화번호에는 하이픈(-)을 반드시 포함해야 합니다.",
+      }),
     role: z.nativeEnum(Role).default(Role.ADMIN),
   })
   .refine((data) => data.password === data.confirmPassword, {
@@ -72,12 +75,18 @@ export const UserSignUpSchema = createInsertSchema(users)
       .string({ required_error: "회사 전화번호는 필수 입력 항목입니다." })
       .trim()
       .min(9, "회사 전화번호는 최소 9자 이상이어야 합니다.")
-      .regex(phoneRegex, "회사 전화번호 형식이 올바르지 않습니다."),
+      .regex(phoneRegex, "회사 전화번호 형식이 올바르지 않습니다.")
+      .refine((val) => val.includes("-"), {
+        message: "회사 전화번호에는 하이픈(-)을 반드시 포함해야 합니다.",
+      }),
     phone: z
       .string({ required_error: "전화번호는 필수 입력 항목입니다." })
       .min(9, "전화번호는 최소 9자 이상이어야 합니다.")
       .regex(phoneRegex, "전화번호 형식이 올바르지 않습니다.")
-      .trim(),
+      .trim()
+      .refine((val) => val.includes("-"), {
+        message: "전화번호에는 하이픈(-)을 반드시 포함해야 합니다.",
+      }),
     password: z
       .string({ required_error: "비밀번호는 필수 입력 항목입니다." })
       .trim()

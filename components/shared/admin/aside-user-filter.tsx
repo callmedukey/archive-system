@@ -76,10 +76,12 @@ const AsideUserFilter = ({ regions, userRole }: AsideUserFilterProps) => {
         <SelectWithLabel
           name="region"
           label=""
-          options={regions.map((region) => ({
-            label: region.name,
-            value: region.id,
-          }))}
+          options={regions
+            .map((region) => ({
+              label: region.name,
+              value: region.id,
+            }))
+            .sort((a, b) => a.label.localeCompare(b.label))}
           disableLabel
           value={selectedRegion?.id || ""}
           placeholder="권역 선택"

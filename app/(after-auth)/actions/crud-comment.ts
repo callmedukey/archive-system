@@ -137,3 +137,78 @@ export async function createComment(
   };
   return response;
 }
+
+export async function deleteComment(commentId: string) {
+  const session = await auth();
+
+  if (!session || session.user.role !== Role.SUPERADMIN) {
+    return { success: false, message: "관리자 권한이 필요합니다." };
+  }
+
+  const comment = await db.query.comments.findFirst({
+    where: eq(comments.id, Number(commentId)),
+  });
+
+  if (!comment) {
+    return { success: false, message: "존재하지 않는 댓글입니다." };
+  }
+
+  await db.delete(comments).where(eq(comments.id, Number(commentId)));
+
+  revalidatePath(
+    `/${renderBaseRolePathname(session.user.role as Role)}/notice/${
+      comment.noticeId
+    }`
+  );
+  revalidatePath(
+    `/${renderBaseRolePathname(session.user.role as Role)}/inquiries/${
+      comment.inquiryId
+    }`
+  );
+  revalidatePath(
+    `/${renderBaseRolePathname(session.user.role as Role)}/documents/${
+      comment.documentId
+    }`
+  );
+
+  return { success: true, message: "댓글이 성공적으로 삭제되었습니다." };
+}
+
+export async function updateComment(commentId: string, content: string) {
+  const session = await auth();
+
+  if (!session || session.user.role !== Role.SUPERADMIN) {
+    return { success: false, message: "관리자 권한이 필요합니다." };
+  }
+
+  const comment = await db.query.comments.findFirst({
+    where: eq(comments.id, Number(commentId)),
+  });
+
+  if (!comment) {
+    return { success: false, message: "존재하지 않는 댓글입니다." };
+  }
+
+  await db
+    .update(comments)
+    .set({ content })
+    .where(eq(comments.id, Number(commentId)));
+
+  revalidatePath(
+    `/${renderBaseRolePathname(session.user.role as Role)}/notice/${
+      comment.noticeId
+    }`
+  );
+  revalidatePath(
+    `/${renderBaseRolePathname(session.user.role as Role)}/inquiries/${
+      comment.inquiryId
+    }`
+  );
+  revalidatePath(
+    `/${renderBaseRolePathname(session.user.role as Role)}/documents/${
+      comment.documentId
+    }`
+  );
+
+  return { success: true, message: "댓글이 성공적으로 수정되었습니다." };
+}

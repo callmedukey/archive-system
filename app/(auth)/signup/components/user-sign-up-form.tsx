@@ -74,6 +74,7 @@ export function UserSignUpForm({ regionsOptions }: UserSignUpFormProps) {
         name="phone"
         type="tel"
         error={state.errors?.phone?.[0]}
+        placeholder="010-1234-5678"
         defaultValue={state.inputs?.phone}
       />
       <InputWithLabelAndError

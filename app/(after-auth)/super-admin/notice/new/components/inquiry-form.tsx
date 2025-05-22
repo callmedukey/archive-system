@@ -264,7 +264,7 @@ const InquiryForm = ({ onSuccessRedirectUrl, ...props }: InquiryFormProps) => {
           isLoading={isPending}
           disabled={isPending || uploadingImage || uploadingFile}
         >
-          공지 등록
+          문의등록
         </ButtonWithLoading>
       </div>
     </motion.form>
